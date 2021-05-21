@@ -8,7 +8,7 @@
     <!-- The page supports only a dark color schemes -->
     <meta name="color-scheme" content="dark">
 
-    <title>kaykerrs Raffle Results</title>
+    <title>nedd_boy Raffle Results</title>
 
     <style>
         [v-cloak] {
@@ -116,16 +116,16 @@
     <script>
         function makeid(length) {
             var result = [];
-            var characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
             var charactersLength = characters.length;
             for (var i = 0; i < length; i++) {
                 result.push(characters.charAt(Math.floor(Math.random() * charactersLength)));
             }
-            return result.join("");
+            return result.join('');
         }
 
         var cachebust = makeid(5) + "=" + new Date().getTime();
-        var dataUrl = atob("aHR0cHM6Ly9naXN0LmdpdGh1YnVzZXJjb250ZW50LmNvbS96aHIwZ2l0LzEzNTVjNGZhYTQ4M2Y1MWUyZTMwYTg1ZTgyNGU1Zjc1L3Jhdy9rYXlrZXJycy5qc29u");
+        var dataUrl = atob("aHR0cHM6Ly9naXN0LmdpdGh1YnVzZXJjb250ZW50LmNvbS96aHIwZ2l0LzBjNWEwNTMyMDNhOTdiM2Y4OTk0NTgyYmE5NWY1ZTk0L3Jhdy9uZWRkX2JveS5qc29u");
         var fetchRollDataUrl = dataUrl + "?" + cachebust;
 
         $(function () {
@@ -143,7 +143,7 @@
             var app = new Vue({
                 el: "#main",
                 data: {
-                    raffleHost: "kaykerrs",
+                    raffleHost: "nedd_boy",
                     lastUpdatedTime: "",
                     lastUpdatedDate: null,
                     users: [],
