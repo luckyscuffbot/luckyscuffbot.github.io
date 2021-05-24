@@ -123,42 +123,21 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4"
         crossorigin="anonymous"></script>
+    <script src="scripts/lsb.js"></script>
     <script>
-        function makeid(length) {
-            var result = [];
-            var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-            var charactersLength = characters.length;
-            for (var i = 0; i < length; i++) {
-                result.push(characters.charAt(Math.floor(Math.random() * charactersLength)));
-            }
-            return result.join('');
-        }
-
-        var cachebust = makeid(5) + "=" + new Date().getTime();
-        var dataUrl = atob("aHR0cHM6Ly9naXN0LmdpdGh1YnVzZXJjb250ZW50LmNvbS96aHIwZ2l0LzBjNWEwNTMyMDNhOTdiM2Y4OTk0NTgyYmE5NWY1ZTk0L3Jhdy9uZWRkX2JveS5qc29u");
-        var fetchRollDataUrl = dataUrl + "?" + cachebust;
-
         $(function () {
-            //
-            // Register Vue plugin(s)
-
-            // Timeago
-            Vue.use(window.VueTimeago, {
-                name: 'timeago',
-                locale: 'en-US'
-            });
-
             //
             // Register App
             var app = new Vue({
                 el: "#main",
                 data: {
                     raffleHost: "nedd_boy",
+                    raffleDataUrl: "aHR0cHM6Ly9hcGkuZ2l0aHViLmNvbS9naXN0cy8wYzVhMDUzMjAzYTk3YjNmODk5NDU4MmJhOTVmNWU5NA==",
                     lastUpdatedTime: "",
                     lastUpdatedDate: null,
+                    loading: true,
                     users: [],
-                    userSearch: "",
-                    loading: true
+                    userSearch: ""
                 },
                 computed: {
                     lastUpdated: function () {
@@ -189,23 +168,32 @@
                 },
                 methods: {
                     fetchUsers: function () {
-                        var self = this;
-                        $.getJSON(fetchRollDataUrl, function (data) {
-                            if (typeof data != "undefined") {
-                                var users = data.users
+                        $.getJSON(atob(this.raffleDataUrl)).then(function (rsp) {
+                            if (!rsp || !rsp.files) return null;
+                            var fdata = rsp.files[`${this.raffleHost}.json`];
+                            if (!fdata) return null;
+                            return fdata;
+                        }.bind(this)).then(function (fdata) {
+                            if (fdata == null) {
+                                this.loading = false;
+                                return;
+                            }
+                            $.getJSON(fdata.raw_url, function (data) {
+                                if (typeof data == "undefined" || data == null) {
+                                    this.loading = false;
+                                    return;
+                                }
+                                this.lastUpdatedTime = data.lastUpdated;
+                                this.lastUpdatedDate = new Date(data.lastUpdated);
+                                this.users = data.users
                                     .sort((a, b) => b.roll - a.roll)
                                     .map((user, idx) => {
                                         user.placeIdx = idx;
                                         return user;
                                     });
-
-                                self.users = users;
-                                self.lastUpdatedTime = data.lastUpdated;
-                                self.lastUpdatedDate = new Date(data.lastUpdated);
-                                self.loading = false;
-                            } else {
-                            }
-                        });
+                                this.loading = false;
+                            }.bind(this));
+                        }.bind(this));
                     }
                 }
             });
