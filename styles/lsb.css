@@ -10,6 +10,14 @@
     content: ""
 }
 
+.text-twitch {
+    color: #9146ff !important;
+}
+
+.text-twitch-muted {
+    color: #6441a5 !important;
+}
+
 .bd-search::after {
     position: absolute;
     top: .4rem;
