@@ -1,4 +1,8 @@
 //
+// jQuery global opts
+$.ajaxSetup({ cache: false });
+
+//
 // Register Vue plugin(s)
 
 // Timeago

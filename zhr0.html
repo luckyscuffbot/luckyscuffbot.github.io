@@ -126,10 +126,6 @@
     <script src="scripts/lsb.js"></script>
     <script>
         $(function () {
-            $.ajaxSetup({ cache: false });
-
-            //
-            // Register App
             var app = new Vue({
                 el: "#main",
                 data: {
@@ -155,47 +151,54 @@
                     }
                 },
                 mounted: function () {
-                    this.fetchUsers();
+                    this.fetchData().then(resp => {
+                        if (resp == null) return;
+                        this.fetchUserData(resp);
+                    }).always(() => {
+                        this.loading = false;
+                    });
+
                     this.keyListener = function (e) {
                         if (e.key === "f" && (e.ctrlKey || e.metaKey)) {
                             e.preventDefault();
-                            // focus search input for user
+
                             this.$refs.search.focus();
                         }
                     };
+
                     document.addEventListener("keydown", this.keyListener.bind(this));
                 },
                 beforeDestroy: function () {
                     document.removeEventListener("keydown", this._keyListener);
                 },
                 methods: {
-                    fetchUsers: function () {
-                        $.getJSON(atob(this.raffleDataUrl)).then(function (rsp) {
-                            if (!rsp || !rsp.files) return null;
-                            var fdata = rsp.files[`${this.raffleHost}.json`];
+                    get: function (url) {
+                        return $.getJSON(url).then(resp => { return resp; });
+                    },
+                    fetchData: function () {
+                        return this.get(atob(this.raffleDataUrl)).then(resp => {
+                            if (!resp || !resp.files) return null;
+                            var fdata = resp.files[`${this.raffleHost}.json`];
                             if (!fdata) return null;
                             return fdata;
-                        }.bind(this)).then(function (fdata) {
-                            if (fdata == null) {
-                                this.loading = false;
+                        });
+                    },
+                    fetchUserData: function (data) {
+                        return this.get(data.raw_url).then(resp => {
+                            if (typeof resp == "undefined" || resp == null) {
                                 return;
                             }
-                            $.getJSON(fdata.raw_url, function (data) {
-                                if (typeof data == "undefined" || data == null) {
-                                    this.loading = false;
-                                    return;
-                                }
-                                this.lastUpdatedTime = data.lastUpdated;
-                                this.lastUpdatedDate = new Date(data.lastUpdated);
-                                this.users = data.users
-                                    .sort((a, b) => b.roll - a.roll)
-                                    .map((user, idx) => {
-                                        user.placeIdx = idx;
-                                        return user;
-                                    });
-                                this.loading = false;
-                            }.bind(this));
-                        }.bind(this));
+
+                            this.lastUpdatedTime = resp.lastUpdated;
+                            this.lastUpdatedDate = new Date(resp.lastUpdated);
+
+                            this.users = resp.users
+                                .sort((a, b) => b.roll - a.roll)
+                                .map((user, idx) => {
+                                    user.placeIdx = idx;
+                                    return user;
+                                });
+                        });
                     }
                 }
             });
