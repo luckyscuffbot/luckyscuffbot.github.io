@@ -36,7 +36,7 @@
                         <div v-if="lastUpdatedTime !== ''">
                             <button type="button" class="btn border-light btn-dark">
                                 <strong>Updated</strong>
-                                <span class="badge bg-success">
+                                <span class="badge bg-info">
                                     <timeago :datetime="lastUpdatedDate" :auto-update="60"></timeago>
                                 </span>
                             </button>
@@ -48,7 +48,7 @@
         <div class="container py-1" v-cloak>
             <div class="row g-1 align-items-center border-bottom">
                 <div class="col-sm-4">
-                    <a v-bind:href="raffleHostUrl" target="_blank"
+                    <a v-bind:href="raffleHostUrl" target="_blank" rel="noreferrer"
                         class="d-flex align-items-center text-dark text-decoration-none">
                         <svg xmlns="http://www.w3.org/2000/svg" width="40" height="32" fill="currentColor"
                             class="bi bi-twitch me-2 text-white" viewBox="0 0 16 16" role="img">
@@ -76,7 +76,7 @@
                 </div>
             </div>
             <div class="table-responsive" v-else>
-                <table class="table align-middle table-hover text-white text-center">
+                <table class="table align-middle text-white text-center">
                     <thead>
                         <tr>
                             <th style="width: 5%;">#</th>
@@ -90,7 +90,16 @@
                             <th scope="row" v-if="!userSearch">{{ index + 1 }}</th>
                             <th scope="row" v-if="userSearch">{{ user.placeIdx + 1 }}</th>
                             <td>{{ user.name }}</td>
-                            <td>{{ user.roll }}</td>
+                            <td class="align-middle" v-if="user.rollTieBreaker > 0">
+                                {{ user.roll }}
+                                <span class="badge bg-info" data-bs-toggle="tooltip" title="" data-bs-placement="right"
+                                    data-bs-original-title="Tie Breaker Roll">
+                                    {{ user.rollTieBreaker }}
+                                </span>
+                            </td>
+                            <td v-else>
+                                {{ user.roll }}
+                            </td>
                             <td v-if="user.isSubscribed">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                                     class="bi bi-check-circle text-success" viewBox="0 0 16 16">
@@ -120,12 +129,16 @@
         integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/vue@2" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/vue-timeago@5.1.3/dist/vue-timeago.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"
+        crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4"
         crossorigin="anonymous"></script>
     <script src="scripts/lsb.js"></script>
     <script>
         $(function () {
+            $("body").tooltip({ selector: '[data-bs-toggle=tooltip]' });
+
             var app = new Vue({
                 el: "#main",
                 data: {
