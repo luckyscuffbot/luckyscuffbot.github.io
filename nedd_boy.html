@@ -90,7 +90,7 @@
                             <th scope="row" v-if="!userSearch">{{ index + 1 }}</th>
                             <th scope="row" v-if="userSearch">{{ user.placeIdx + 1 }}</th>
                             <td>{{ user.name }}</td>
-                            <td class="align-middle" v-if="user.rollTieBreaker > 0">
+                            <td class="align-middle" v-if="user.rollTieBreaker > 0 && shouldShowTies">
                                 {{ user.roll }}
                                 <span class="badge bg-dark" data-bs-toggle="tooltip" title="" data-bs-placement="right"
                                     data-bs-original-title="Tie Breaker Roll">
@@ -141,70 +141,11 @@
 
             var app = new Vue({
                 el: "#main",
-                data: {
-                    raffleHost: "nedd_boy",
-                    raffleDataUrl: "aHR0cHM6Ly9hcGkuZ2l0aHViLmNvbS9naXN0cy8wYzVhMDUzMjAzYTk3YjNmODk5NDU4MmJhOTVmNWU5NA==",
-                    lastUpdatedTime: "",
-                    lastUpdatedDate: null,
-                    loading: true,
-                    users: [],
-                    userSearch: ""
-                },
-                computed: {
-                    lastUpdated: function () {
-                        return new Date().toUTCString();
-                    },
-                    raffleHostUrl: function () {
-                        return "https://twitch.tv/" + this.raffleHost;
-                    },
-                    filteredUsers: function () {
-                        return this.users.filter((user, i) => {
-                            return user.name.toLowerCase().includes(this.userSearch.toLowerCase());
-                        });
-                    }
-                },
-                mounted: function () {
-                    this.fetchUsers();
-                    this.keyListener = function (e) {
-                        if (e.key === "f" && (e.ctrlKey || e.metaKey)) {
-                            e.preventDefault();
-                            // focus search input for user
-                            this.$refs.search.focus();
-                        }
-                    };
-                    document.addEventListener("keydown", this.keyListener.bind(this));
-                },
-                beforeDestroy: function () {
-                    document.removeEventListener("keydown", this._keyListener);
-                },
-                methods: {
-                    fetchUsers: function () {
-                        $.getJSON(atob(this.raffleDataUrl)).then(function (rsp) {
-                            if (!rsp || !rsp.files) return null;
-                            var fdata = rsp.files[`${this.raffleHost}.json`];
-                            if (!fdata) return null;
-                            return fdata;
-                        }.bind(this)).then(function (fdata) {
-                            if (fdata == null) {
-                                this.loading = false;
-                                return;
-                            }
-                            $.getJSON(fdata.raw_url, function (data) {
-                                if (typeof data == "undefined" || data == null) {
-                                    this.loading = false;
-                                    return;
-                                }
-                                this.lastUpdatedTime = data.lastUpdated;
-                                this.lastUpdatedDate = new Date(data.lastUpdated);
-                                this.users = data.users
-                                    .sort((a, b) => b.roll - a.roll)
-                                    .map((user, idx) => {
-                                        user.placeIdx = idx;
-                                        return user;
-                                    });
-                                this.loading = false;
-                            }.bind(this));
-                        }.bind(this));
+                mixins: [RaffleHost],
+                data: function () {
+                    return {
+                        raffleHost: "nedd_boy",
+                        raffleDataUrl: "aHR0cHM6Ly9hcGkuZ2l0aHViLmNvbS9naXN0cy8wYzVhMDUzMjAzYTk3YjNmODk5NDU4MmJhOTVmNWU5NA=="
                     }
                 }
             });
