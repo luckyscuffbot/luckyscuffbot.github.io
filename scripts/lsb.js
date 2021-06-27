@@ -89,7 +89,7 @@ var RaffleHost = {
                 this.lastUpdatedDate = new Date(resp.lastUpdated);
 
                 this.users = resp.users
-                    .sort((a, b) => b.roll - a.roll)
+                    .sort((a, b) => b.roll - a.roll || b.rollTieBreaker - a.rollTieBreaker)
                     .map((user, idx) => {
                         user.placeIdx = idx;
                         return user;
