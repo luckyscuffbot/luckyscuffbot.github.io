@@ -88,6 +88,7 @@ var RaffleHost = {
                 this.lastUpdatedTime = resp.lastUpdated;
                 this.lastUpdatedDate = new Date(resp.lastUpdated);
 
+                // Sort by highest roll, then by tie breaking roll (if any)
                 this.users = resp.users
                     .sort((a, b) => b.roll - a.roll || b.rollTieBreaker - a.rollTieBreaker)
                     .map((user, idx) => {
