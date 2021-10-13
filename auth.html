@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The page supports only a dark color schemes -->
+    <meta name="color-scheme" content="dark">
+
+    <title>Authorize Lucky Scuff Bot</title>
+
+    <link rel="icon" href="images/people.svg">
+
+    <link rel="stylesheet" type="text/css" href="./styles/lsb.css">
+    <link rel="stylesheet" href=" https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css"
+        integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-dark-5@1.0.1/dist/css/bootstrap-night.min.css">
+</head>
+
+<body>
+    <main id="main">
+        <header>
+            <div class="navbar navbar-dark bg-dark shadow-sm">
+                <div class="container">
+                    <a href="/" class="navbar-brand d-flex align-items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="38" height="30" fill="currentColor"
+                            class="bi bi-arrow-left-circle me-2" viewBox="0 0 16 16">
+                            <path fill-rule="evenodd"
+                                d="M1 8a7 7 0 1 0 14 0A7 7 0 0 0 1 8zm15 0A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-4.5-.5a.5.5 0 0 1 0 1H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H11.5z" />
+                        </svg>
+                        <strong>Lucky Scuff Bot</strong>
+                    </a>
+                    <form class="d-flex">
+                        <!-- <div v-if="lastUpdatedTime !== ''">
+                            <button type="button" class="btn border-light btn-dark">
+                                <strong>Updated</strong>
+                                <span class="badge bg-info">
+                                    <timeago :datetime="lastUpdatedDate" :auto-update="60"></timeago>
+                                </span>
+                            </button>
+                        </div> -->
+                    </form>
+                </div>
+            </div>
+        </header>
+        <div class="container py-1" v-cloak>
+            <div class="px-4 py-5 my-5">
+                <h1 class="display-5 fw-bold text-center"> <svg xmlns="http://www.w3.org/2000/svg" width="64"
+                        height="64" fill="currentColor" class="bi bi-terminal-fill" viewBox="0 0 16 16">
+                        <path
+                            d="M0 3a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3zm9.5 5.5h-3a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1zm-6.354-.354a.5.5 0 1 0 .708.708l2-2a.5.5 0 0 0 0-.708l-2-2a.5.5 0 1 0-.708.708L4.793 6.5 3.146 8.146z" />
+                    </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor"
+                        class="bi bi-arrow-left-right" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd"
+                            d="M1 11.5a.5.5 0 0 0 .5.5h11.793l-3.147 3.146a.5.5 0 0 0 .708.708l4-4a.5.5 0 0 0 0-.708l-4-4a.5.5 0 0 0-.708.708L13.293 11H1.5a.5.5 0 0 0-.5.5zm14-7a.5.5 0 0 1-.5.5H2.707l3.147 3.146a.5.5 0 1 1-.708.708l-4-4a.5.5 0 0 1 0-.708l4-4a.5.5 0 1 1 .708.708L2.707 4H14.5a.5.5 0 0 1 .5.5z" />
+                    </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="currentColor"
+                        class="bi bi-twitch" viewBox="0 0 16 16">
+                        <path
+                            d="M3.857 0 1 2.857v10.286h3.429V16l2.857-2.857H9.57L14.714 8V0H3.857zm9.714 7.429-2.285 2.285H9l-2 2v-2H4.429V1.143h9.142v6.286z" />
+                        <path d="M11.857 3.143h-1.143V6.57h1.143V3.143zm-3.143 0H7.571V6.57h1.143V3.143z" />
+                    </svg>
+                </h1>
+                <div class="col-lg-6 mx-auto">
+                    <p class="lead mb-0 pt-2 text-center">Lucky Scuff Bot will request the following permission(s):</p>
+                    <div class="my-3 mt-0 p-3 py-0 pt-0 pb-2 small bg-body rounded">
+                        <h6 class="border-bottom pb-2 mb-0">&nbsp;</h6>
+                        <div class="d-flex text-muted pt-3" v-for="(scope, index) in appScopes">
+                            <p class="pb-3 mb-0 lh-sm border-bottom"
+                                style="min-width: 100%; text-transform: capitalize;">
+                                <strong class="d-block text-gray-dark" style="text-transform: capitalize;"><kbd v-if="scope.Type">{{ scope.Type }}</kbd> <kbd v-if="scope.Action">{{scope.Action }}</kbd> <kbd v-if="scope.Category">{{ scope.Category }}</kbd>
+                                </strong>
+                                <br />
+                                <em class="text-white" v-if="scope.Description">{{ scope.Description }}</em>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="d-grid gap-2 d-sm-flex justify-content-sm-center pt-2">
+                        <a href="/" type="button" class="btn btn-outline-secondary btn-lg px-4">Cancel</a>
+                        <!-- <button type="button" class="btn btn-info btn-lg px-4 gap-3" v-on:click="startAuth">Test</button> -->
+                        <a v-bind:href="twitchAuthUrl" target="_blank" rel="noreferrer" type="button" class="btn btn-info btn-lg px-4 gap-3">Authorize</a>
+                    </div>
+                </div>
+            </div>
+            <div class="m-3 text-center" v-if="loading">
+                <div role="status" class="spinner-border text-light" style="width: 3rem; height: 3rem;">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"
+        integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue-timeago@5.1.3/dist/vue-timeago.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4"
+        crossorigin="anonymous"></script>
+    <script src="scripts/lsb.js"></script>
+    <script>
+        $(function () {
+            $("body").tooltip({ selector: '[data-bs-toggle=tooltip]' });
+
+            var app = new Vue({
+                el: "#main",
+                mixins: [OAuthRequest],
+                data: function () {
+                    return {
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
