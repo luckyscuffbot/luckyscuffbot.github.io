@@ -14,25 +14,23 @@ Vue.use(window.VueTimeago, {
 //
 // Mixins
 
+// Twitch OAuth mixin
 var OAuthRequest = {
     data: function () {
         return {
-            loading: false,
+            loading: true,
+            manifestUrl: "",
             storageAuthKey: "lsb_auth",
             storageStateKey: "lsb_state",
             stateTimer: "",
             stateExpiration: 5,
-            authState: "",
             authCode: null,
-            clientId: "2i9b9y2f52u4g3v3vyova9xbey8nb2",
-            redirectUrl: "https%3A%2F%2Fluckyscuffbot.github.io%2Fauth%2F",
+            authState: null,
+            clientId: "",
+            redirectUrl: "",
             twitchAuthUrl: "",
-            scopes: "channel:read:subscriptions%20channel:read:redemptions%20user:read:subscriptions",
-            scopeDescriptions: {
-                "channel:read:subscriptions": "Get a list of all subscribers to your channel and check if a user is subscribed to your channel.",
-                "channel:read:redemptions": "View your channel points custom reward redemptions.",
-                "user:read:subscriptions": "Get the details of your subscription to a channel."
-            }
+            scopes: "",
+            scopeDescriptions: {}
         }
     },
     computed: {
@@ -56,55 +54,12 @@ var OAuthRequest = {
             return appScopes;
         }
     },
-    created: function () {
-        debugger;
-        // Check for stored authorization already
-        var storedAuthorization = this.storage_get(this.storageAuthKey);
-        if (storedAuthorization != null && storedAuthorization != "") {
-            this.authCode = storedAuthorization.authCode;
-            return;
-        }
-
-        // Check initial state
-        this.checkState();
-
-        // Every minute check and revaluate state
-        this.stateTimer = setInterval(this.checkState, (this.stateExpiration * 60 * 1000));
-    },
     mounted: function () {
-        let uri = window.location.search.substring(1);
-        let params = new URLSearchParams(uri);
-
-        var authCode = params.get("code");
-        var authState = params.get("state");
-
-        if (authCode && authState) {
-            let state = this.storage_get(this.storageStateKey);
-
-            // Check state with auth callback state
-            if (!state || state.key != authState) {
-                // Callback auth state miss match
-                // - Alert user to authorize application again!
-                return;
-            }
-
-            //
-            // Valid state
-
-            // Stop state from refreshing
-            clearInterval(this.stateTimer);
-
-            // Show & save authorization code
-            this.authCode = authCode;
-            this.storage_set(this.storageAuthKey, {
-                "authCode": authCode,
-                "timestamp": new Date()
-            });
-        } else {
-            // Check for already store authorization code!
-        }
-
-        this.loading = false;
+        var self = this;
+        self.fetchManifest().then(resp => {
+            if (resp == null) return;
+            self.parseManifest(resp).then(self.init);
+        });
     },
     methods: {
         storage_get: function (key) {
@@ -112,22 +67,121 @@ var OAuthRequest = {
             return JSON.parse(storedItem ? storedItem : null);
         },
         storage_set: function (key, value) {
-            if (!value) {
-                value = {};
-            }
+            if (!value) value = {};
             localStorage.setItem(key, JSON.stringify(value));
+        },
+        storage_remove: function (key) {
+            localStorage.removeItem(key);
+        },
+        get: function (url) {
+            return $.getJSON(url).then(resp => { return resp; });
+        },
+        fetchManifest: function () {
+            return this.get(atob(this.manifestUrl)).then(resp => {
+                if (!resp || !resp.files) return null;
+                var fdata = resp.files["manifest.auth.json"];
+                if (!fdata) return null;
+                return fdata;
+            });
+        },
+        parseManifest: function (data) {
+            return this.get(data.raw_url).then(resp => {
+                if (typeof resp == "undefined" || resp == null) {
+                    return;
+                }
+                // Get and set manifest data
+                this.clientId = resp.client_id;
+                this.redirectUrl = resp.redirect_uri;
+                this.scopes = resp.scopes;
+                this.scopeDescriptions = resp.scope_descriptions;
+            });
+        },
+        init: function () {
+            // Start client state intialization
+            this.initState();
+
+            // Check for auth code from redirect
+            let uri = window.location.search.substring(1);
+            let params = new URLSearchParams(uri);
+
+            let authCode = params.get("code");
+            let authState = params.get("state");
+
+            // Authorization code & authorization state are present
+            if (authCode && authState) {
+                // Check state with auth callback state
+                let state = this.storage_get(this.storageStateKey);
+                if (!state || state.key != authState) {
+                    // Callback auth state miss match
+                    // - Alert user to authorize application again!
+                    return;
+                }
+
+                //
+                // Valid state
+
+                // Stop state from refreshing
+                clearInterval(this.stateTimer);
+
+                // Show & save authorization code
+                this.authCode = authCode;
+                this.storage_set(this.storageAuthKey, {
+                    "authCode": authCode,
+                    "timestamp": new Date()
+                });
+            } else {
+                // Check for stored authorization
+                var storedAuthorization = this.storage_get(this.storageAuthKey);
+                if (storedAuthorization != null && storedAuthorization != "") {
+                    // Stop state from refreshing
+                    clearInterval(this.stateTimer);
+
+                    // Set stored auth code
+                    this.authCode = storedAuthorization.authCode;
+                }
+            }
+
+            this.loading = false;
+        },
+        initState: function () {
+            // Check initial state
+            this.checkState();
+
+            // Every minute check and revaluate state
+            this.stateTimer = setInterval(this.checkState, (this.stateExpiration * 60 * 1000));
         },
         copyAuthCode: function () {
             var authCode = this.authCode;
             if (authCode && authCode != "") {
                 try {
                     navigator.clipboard.writeText(authCode);
-                } catch ($e) {
-                }
+                } catch ($e) { }
             }
         },
+        resetAuthCode: function () {
+            Swal.fire({
+                position: "top",
+                icon: "warning",
+                title: "Reset authorization code?",
+                html: "<p class='lead small'>This might <strong>disable</strong> bot functionality and you will have reconnect the bot to your twitch account!</p><p class='lead'>Do you want to continue?</p>",
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                allowEnterKey: false,
+                reverseButtons: true,
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'Yes, reset it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Clear stored auth code
+                    this.storage_remove(this.storageAuthKey);
+
+                    // Refresh window
+                    window.location.reload(true);
+                }
+            });
+        },
         checkState: function () {
-            debugger;
             let state = this.storage_get(this.storageStateKey);
             let stateThreshold = this.stateExpiration * 60 * 1000;
 
@@ -148,7 +202,6 @@ var OAuthRequest = {
                 "key": Math.random().toString(36).substr(2, 9),
                 "timestamp": new Date()
             };
-            console.log(state);
             return state;
         }
     }
