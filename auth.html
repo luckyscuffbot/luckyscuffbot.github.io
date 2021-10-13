@@ -46,7 +46,24 @@
             </div>
         </header>
         <div class="container py-1" v-cloak>
-            <div class="px-4 py-5 my-5">
+            <div class="px-4 my-5 text-center" v-if="authCode != null && authCode != ''">
+                <h1 class="display-5 fw-bold text-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="currentColor"
+                        class="bi bi-check2 text-success" viewBox="0 0 16 16">
+                        <path
+                            d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z" />
+                    </svg>
+                </h1>
+                <div class="col-lg-6 mx-auto">
+                    <h3 class="pt-3 text-center">Success! Lucky Scuff Bot is almost connected!</h3>
+                    <p class="lead pt-3 text-center"> Client Authorization Code:</p>
+                    <div class="small bg-body rounded text-center">
+                        <button type="button" class="btn border-light btn-dark" data-bs-toggle="tooltip" data-bs-original-title="Click to copy" v-on:click="copyAuthCode">{{ authCode }}</button>
+                    </div>
+                    <p class="lead pt-3 text-center">Please copy and provide this authorization code to the developer!</p>
+                </div>
+            </div>
+            <div class="px-4 my-5" v-else>
                 <h1 class="display-5 fw-bold text-center"> <svg xmlns="http://www.w3.org/2000/svg" width="64"
                         height="64" fill="currentColor" class="bi bi-terminal-fill" viewBox="0 0 16 16">
                         <path
@@ -65,23 +82,26 @@
                     </svg>
                 </h1>
                 <div class="col-lg-6 mx-auto">
-                    <p class="lead mb-0 pt-2 text-center">Lucky Scuff Bot will request the following permission(s):</p>
-                    <div class="my-3 mt-0 p-3 py-0 pt-0 pb-2 small bg-body rounded">
-                        <h6 class="border-bottom pb-2 mb-0">&nbsp;</h6>
+                    <p class="lead pt-3 text-center">Lucky Scuff Bot wants to access your Twitch account.</p>
+                    <div class="my-3 mt-0 p-3 py-0 pt-1 pb-2 small bg-body rounded">
+                        <h6 class="border-bottom pb-2 mb-0">This will allow access to:</h6>
                         <div class="d-flex text-muted pt-3" v-for="(scope, index) in appScopes">
                             <p class="pb-3 mb-0 lh-sm border-bottom"
                                 style="min-width: 100%; text-transform: capitalize;">
-                                <strong class="d-block text-gray-dark" style="text-transform: capitalize;"><kbd v-if="scope.Type">{{ scope.Type }}</kbd> <kbd v-if="scope.Action">{{scope.Action }}</kbd> <kbd v-if="scope.Category">{{ scope.Category }}</kbd>
+                                <strong class="d-block text-gray-dark" style="text-transform: capitalize;"><kbd
+                                        v-if="scope.Type">{{ scope.Type }}</kbd> <kbd v-if="scope.Action">{{scope.Action}}</kbd> <kbd v-if="scope.Category">{{ scope.Category }}</kbd>
                                 </strong>
                                 <br />
                                 <em class="text-white" v-if="scope.Description">{{ scope.Description }}</em>
                             </p>
                         </div>
+                        <small class="d-block text-end mt-3">
+                            <p class="small">To revoke access at any time, go to your twitch account settings</p>
+                          </small>
                     </div>
-                    <div class="d-grid gap-2 d-sm-flex justify-content-sm-center pt-2">
+                    <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
                         <a href="/" type="button" class="btn btn-outline-secondary btn-lg px-4">Cancel</a>
-                        <!-- <button type="button" class="btn btn-info btn-lg px-4 gap-3" v-on:click="startAuth">Test</button> -->
-                        <a v-bind:href="twitchAuthUrl" target="_blank" rel="noreferrer" type="button" class="btn btn-info btn-lg px-4 gap-3">Authorize</a>
+                        <a v-bind:href="twitchAuthUrl" rel="noreferrer" type="button" class="btn btn-info btn-lg px-4 gap-3">Authorize</a>
                     </div>
                 </div>
             </div>

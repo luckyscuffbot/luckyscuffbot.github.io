@@ -18,12 +18,15 @@ var OAuthRequest = {
     data: function () {
         return {
             loading: false,
+            storageAuthKey: "lsb_auth",
+            storageStateKey: "lsb_state",
             stateTimer: "",
+            stateExpiration: 5,
             authState: "",
-            authCode: "",
-            authWin: null,
+            authCode: null,
             clientId: "2i9b9y2f52u4g3v3vyova9xbey8nb2",
-            redirectUrl: "https://luckyscuffbot.github.io/auth",
+            redirectUrl: "https%3A%2F%2Fluckyscuffbot.github.io%2Fauth%2F",
+            twitchAuthUrl: "",
             scopes: "channel:read:subscriptions%20channel:read:redemptions%20user:read:subscriptions",
             scopeDescriptions: {
                 "channel:read:subscriptions": "Get a list of all subscribers to your channel and check if a user is subscribed to your channel.",
@@ -33,9 +36,6 @@ var OAuthRequest = {
         }
     },
     computed: {
-        twitchAuthUrl: function () {
-            return "https://id.twitch.tv/oauth2/authorize?client_id=" + this.clientId + "&redirect_uri=" + this.redirectUrl + "&response_type=code&scope=" + this.scopes + "&state=" + this.authState
-        },
         appScopes: function () {
             let appScopes = [{ Type: "Chat", Category: "Messaging", Action: "Login", Description: "Ability to log into chat and send messages." }];
 
@@ -57,56 +57,91 @@ var OAuthRequest = {
         }
     },
     created: function () {
+        debugger;
+        // Check for stored authorization already
+        var storedAuthorization = this.storage_get(this.storageAuthKey);
+        if (storedAuthorization != null && storedAuthorization != "") {
+            this.authCode = storedAuthorization.authCode;
+            return;
+        }
+
         // Check initial state
         this.checkState();
 
         // Every minute check and revaluate state
-        setInterval(this.checkState, 60000);
+        this.stateTimer = setInterval(this.checkState, (this.stateExpiration * 60 * 1000));
     },
     mounted: function () {
         let uri = window.location.search.substring(1);
         let params = new URLSearchParams(uri);
-        if (params.get("code") && params.get("state")) {
-            let state = null;
-            let storedState = localStorage.getItem("lsb_state");
-            if (storedState) {
-                state = JSON.parse(storedState);
-            }
-            if (state) {
-                thise.authCode = state.authCode;
-            }
-            debugger;
-        } else {
 
+        var authCode = params.get("code");
+        var authState = params.get("state");
+
+        if (authCode && authState) {
+            let state = this.storage_get(this.storageStateKey);
+
+            // Check state with auth callback state
+            if (!state || state.key != authState) {
+                // Callback auth state miss match
+                // - Alert user to authorize application again!
+                return;
+            }
+
+            //
+            // Valid state
+
+            // Stop state from refreshing
+            clearInterval(this.stateTimer);
+
+            // Show & save authorization code
+            this.authCode = authCode;
+            this.storage_set(this.storageAuthKey, {
+                "authCode": authCode,
+                "timestamp": new Date()
+            });
+        } else {
+            // Check for already store authorization code!
         }
+
         this.loading = false;
     },
     methods: {
-        startAuth: function () {
-            let params = `scrollbars=no,resizable=no,status=no,location=no,toolbar=no,menubar=no,width=735,height=800,left=-1000,top=-1000`;
-            let authWindow = window.open(this.twitchAuthUrl, "Twitch Authorize", params);
-
-            authWindow.addEventListener('load', function () {
-                debugger;
-            }, false);
+        storage_get: function (key) {
+            var storedItem = localStorage.getItem(key);
+            return JSON.parse(storedItem ? storedItem : null);
+        },
+        storage_set: function (key, value) {
+            if (!value) {
+                value = {};
+            }
+            localStorage.setItem(key, JSON.stringify(value));
+        },
+        copyAuthCode: function () {
+            var authCode = this.authCode;
+            if (authCode && authCode != "") {
+                try {
+                    navigator.clipboard.writeText(authCode);
+                } catch ($e) {
+                }
+            }
         },
         checkState: function () {
-            let state = null;
-            let stateThreshold = 1 * 60 * 1000;
-            let storedState = localStorage.getItem("lsb_state");
+            debugger;
+            let state = this.storage_get(this.storageStateKey);
+            let stateThreshold = this.stateExpiration * 60 * 1000;
 
-            if (storedState == null) {
-                localStorage.setItem("lsb_state", JSON.stringify(this.generateUniqueState()));
+            if (state == null) {
+                this.storage_set(this.storageKey, this.generateUniqueState());
             } else {
-                state = JSON.parse(storedState);
-
                 // Check for stale state
                 if ((new Date() - new Date(state.timestamp)) >= stateThreshold) {
                     state = this.generateUniqueState();
-                    localStorage.setItem("lsb_state", JSON.stringify(state));
+                    this.storage_set(this.storageStateKey, state);
                 }
             }
             this.authState = state.key;
+            this.twitchAuthUrl = "https://id.twitch.tv/oauth2/authorize?client_id=" + this.clientId + "&redirect_uri=" + this.redirectUrl + "&response_type=code&scope=" + this.scopes + "&state=" + this.authState;
         },
         generateUniqueState: function () {
             let state = {
