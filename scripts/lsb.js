@@ -59,6 +59,8 @@ var OAuthRequest = {
         self.fetchManifest().then(resp => {
             if (resp == null) return;
             self.parseManifest(resp).then(self.init);
+        }).always(() => {
+            this.loading = false;
         });
     },
     methods: {
