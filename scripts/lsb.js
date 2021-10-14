@@ -190,7 +190,7 @@ var OAuthRequest = {
             let stateThreshold = this.stateExpiration * 60 * 1000;
 
             if (state == null) {
-                this.storage_set(this.storageKey, this.generateUniqueState());
+                this.storage_set(this.storageStateKey, this.generateUniqueState());
             } else {
                 // Check for stale state
                 if ((new Date() - new Date(state.timestamp)) >= stateThreshold) {
