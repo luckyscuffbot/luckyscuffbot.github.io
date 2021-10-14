@@ -116,23 +116,43 @@ var OAuthRequest = {
                 // Check state with auth callback state
                 let state = this.storage_get(this.storageStateKey);
                 if (!state || state.key != authState) {
-                    // Callback auth state miss match
-                    // - Alert user to authorize application again!
-                    return;
+                    //
+                    // Invalid state
+
+                    // Clear out any stored auth
+                    this.storage_remove(this.storageAuthKey);
+
+                    // Clear out any stored state
+                    this.storage_remove(this.storageStateKey);
+
+                    // Generate new state
+                    this.initState();
+
+                    // Alert user to authorize application again!
+                    Swal.fire({
+                        position: "top",
+                        icon: "error",
+                        title: "Error",
+                        html: "<p class='lead'>Something went wrong when authorizing your account.</p><p class='lead'>Please try again!</p>",
+                        confirmButtonText: "Ok",
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        allowEnterKey: false,
+                    });
+                } else {
+                    //
+                    // Valid state
+
+                    // Stop state from refreshing
+                    clearInterval(this.stateTimer);
+
+                    // Show & save authorization code
+                    this.authCode = authCode;
+                    this.storage_set(this.storageAuthKey, {
+                        "authCode": authCode,
+                        "timestamp": new Date()
+                    });
                 }
-
-                //
-                // Valid state
-
-                // Stop state from refreshing
-                clearInterval(this.stateTimer);
-
-                // Show & save authorization code
-                this.authCode = authCode;
-                this.storage_set(this.storageAuthKey, {
-                    "authCode": authCode,
-                    "timestamp": new Date()
-                });
             } else {
                 // Check for stored authorization
                 var storedAuthorization = this.storage_get(this.storageAuthKey);
@@ -150,6 +170,11 @@ var OAuthRequest = {
         initState: function () {
             // Check initial state
             this.checkState();
+
+            // Clear any prev interval that may exist
+            if (this.stateTimer != null) {
+                clearInterval(this.stateTimer);
+            }
 
             // Every minute check and revaluate state
             this.stateTimer = setInterval(this.checkState, (this.stateExpiration * 60 * 1000));
@@ -180,8 +205,8 @@ var OAuthRequest = {
                     // Clear stored auth code
                     this.storage_remove(this.storageAuthKey);
 
-                    // Refresh window
-                    window.location.reload(true);
+                    //  Go back to root auth url
+                    window.location = window.location.href.substr(0, window.location.href.indexOf("?"));
                 }
             });
         },
@@ -190,7 +215,8 @@ var OAuthRequest = {
             let stateThreshold = this.stateExpiration * 60 * 1000;
 
             if (state == null) {
-                this.storage_set(this.storageStateKey, this.generateUniqueState());
+                state = this.generateUniqueState();
+                this.storage_set(this.storageStateKey, state);
             } else {
                 // Check for stale state
                 if ((new Date() - new Date(state.timestamp)) >= stateThreshold) {
@@ -202,11 +228,7 @@ var OAuthRequest = {
             this.twitchAuthUrl = "https://id.twitch.tv/oauth2/authorize?client_id=" + this.clientId + "&redirect_uri=" + this.redirectUrl + "&response_type=code&scope=" + this.scopes + "&state=" + this.authState;
         },
         generateUniqueState: function () {
-            let state = {
-                "key": Math.random().toString(36).substr(2, 9),
-                "timestamp": new Date()
-            };
-            return state;
+            return { "key": Math.random().toString(36).substr(2, 9), "timestamp": new Date() };
         }
     }
 };
