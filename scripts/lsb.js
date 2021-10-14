@@ -15,7 +15,7 @@ Vue.use(window.VueTimeago, {
 // Mixins
 
 // Twitch OAuth mixin
-var OAuthRequest = {
+let OAuthRequest = {
     data: function () {
         return {
             loading: true,
@@ -55,7 +55,7 @@ var OAuthRequest = {
         }
     },
     mounted: function () {
-        var self = this;
+        let self = this;
         self.fetchManifest().then(resp => {
             if (resp == null) return;
             self.parseManifest(resp).then(self.init);
@@ -67,7 +67,7 @@ var OAuthRequest = {
     },
     methods: {
         storage_get: function (key) {
-            var storedItem = localStorage.getItem(key);
+            let storedItem = localStorage.getItem(key);
             return JSON.parse(storedItem ? storedItem : null);
         },
         storage_set: function (key, value) {
@@ -83,7 +83,9 @@ var OAuthRequest = {
         fetchManifest: function () {
             return this.get(atob(this.manifestUrl)).then(resp => {
                 if (!resp || !resp.files) return null;
-                var fdata = resp.files["manifest.auth.json"];
+                let fkeys = Object.keys(resp.files);
+                if (!fkeys || fkeys.length == 0) return null;
+                let fdata = resp.files[fkeys[0]];
                 if (!fdata) return null;
                 return fdata;
             });
@@ -155,7 +157,7 @@ var OAuthRequest = {
                 }
             } else {
                 // Check for stored authorization
-                var storedAuthorization = this.storage_get(this.storageAuthKey);
+                let storedAuthorization = this.storage_get(this.storageAuthKey);
                 if (storedAuthorization != null && storedAuthorization != "") {
                     // Stop state from refreshing
                     clearInterval(this.stateTimer);
@@ -180,7 +182,7 @@ var OAuthRequest = {
             this.stateTimer = setInterval(this.checkState, (this.stateExpiration * 60 * 1000));
         },
         copyAuthCode: function () {
-            var authCode = this.authCode;
+            let authCode = this.authCode;
             if (authCode && authCode != "") {
                 try {
                     navigator.clipboard.writeText(authCode);
@@ -234,7 +236,7 @@ var OAuthRequest = {
 };
 
 // Raffle host mixin
-var RaffleHost = {
+let RaffleHost = {
     data: function () {
         return {
             raffleHost: "",
@@ -259,9 +261,9 @@ var RaffleHost = {
             });
         },
         shouldShowTies: function () {
-            var users = this.users;
+            let users = this.users;
             if (!users) return false;
-            var tiedUsers = this.users.filter((user) => user.rollTieBreaker && user.rollTieBreaker > 0);
+            let tiedUsers = this.users.filter((user) => user.rollTieBreaker && user.rollTieBreaker > 0);
             return tiedUsers && tiedUsers.length > 1;
         }
     },
@@ -293,7 +295,7 @@ var RaffleHost = {
         fetchData: function () {
             return this.get(atob(this.raffleDataUrl)).then(resp => {
                 if (!resp || !resp.files) return null;
-                var fdata = resp.files[`${this.raffleHost}.json`];
+                let fdata = resp.files[`${this.raffleHost}.json`];
                 if (!fdata) return null;
                 return fdata;
             });
