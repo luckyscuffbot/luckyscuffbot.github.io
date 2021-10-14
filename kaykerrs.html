@@ -146,7 +146,9 @@
 
             var app = new Vue({
                 el: "#main",
-                mixins: [RaffleHost],
+                mixins: [
+                    raffleHostMixin
+                ],
                 data: function () {
                     return {
                         raffleHost: "kaykerrs",

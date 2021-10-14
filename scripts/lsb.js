@@ -14,8 +14,61 @@ Vue.use(window.VueTimeago, {
 //
 // Mixins
 
+// Ajax utilities mixin
+let ajaxMixin = {
+    methods: {
+        parseUrl: function (url) {
+            var reg = /^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9a-zA-Z+/]{3}=))?$/;
+            return reg.test(url) ? atob(url) : url;
+        },
+        get: function (url) {
+            return $.getJSON(this.parseUrl(url)).then(resp => { return resp; });
+        },
+        fetchData: function (url, fileName) {
+            return this.get(this.parseUrl(url)).then(resp => {
+                if (!resp || !resp.files)
+                    return null;
+
+                let fkeys = Object.keys(resp.files);
+                if (!fkeys || fkeys.length == 0)
+                    return null;
+
+                let fdata = null;
+                if (fileName) {
+                    fdata = resp.files[fileName];
+                } else {
+                    fdata = resp.files[fkeys[0]];
+                }
+
+                return fdata ? fdata : null;
+            });
+        },
+    }
+};
+
+// Local storage mixin
+let storageMixin = {
+    methods: {
+        storage_get: function (key) {
+            let storedItem = localStorage.getItem(key);
+            return JSON.parse(storedItem ? storedItem : null);
+        },
+        storage_set: function (key, value) {
+            if (!value) value = {};
+            localStorage.setItem(key, JSON.stringify(value));
+        },
+        storage_remove: function (key) {
+            localStorage.removeItem(key);
+        },
+    }
+};
+
 // Twitch OAuth mixin
-let OAuthRequest = {
+let authMixin = {
+    mixins: [
+        ajaxMixin,
+        storageMixin
+    ],
     data: function () {
         return {
             loading: true,
@@ -56,9 +109,9 @@ let OAuthRequest = {
     },
     mounted: function () {
         let self = this;
-        self.fetchManifest().then(resp => {
+        self.fetchData(this.manifestUrl).then(resp => {
             if (resp == null) return;
-            self.parseManifest(resp).then(self.init);
+            return self.parseManifest(resp).then(self.init);
         }).always(() => {
             setTimeout(function () {
                 this.loading = false;
@@ -66,30 +119,6 @@ let OAuthRequest = {
         });
     },
     methods: {
-        storage_get: function (key) {
-            let storedItem = localStorage.getItem(key);
-            return JSON.parse(storedItem ? storedItem : null);
-        },
-        storage_set: function (key, value) {
-            if (!value) value = {};
-            localStorage.setItem(key, JSON.stringify(value));
-        },
-        storage_remove: function (key) {
-            localStorage.removeItem(key);
-        },
-        get: function (url) {
-            return $.getJSON(url).then(resp => { return resp; });
-        },
-        fetchManifest: function () {
-            return this.get(atob(this.manifestUrl)).then(resp => {
-                if (!resp || !resp.files) return null;
-                let fkeys = Object.keys(resp.files);
-                if (!fkeys || fkeys.length == 0) return null;
-                let fdata = resp.files[fkeys[0]];
-                if (!fdata) return null;
-                return fdata;
-            });
-        },
         parseManifest: function (data) {
             return this.get(data.raw_url).then(resp => {
                 if (typeof resp == "undefined" || resp == null) {
@@ -236,7 +265,10 @@ let OAuthRequest = {
 };
 
 // Raffle host mixin
-let RaffleHost = {
+let raffleHostMixin = {
+    mixins: [
+        ajaxMixin
+    ],
     data: function () {
         return {
             raffleHost: "",
@@ -268,9 +300,9 @@ let RaffleHost = {
         }
     },
     mounted: function () {
-        this.fetchData().then(resp => {
+        this.fetchData(this.raffleDataUrl, `${this.raffleHost}.json`).then(resp => {
             if (resp == null) return;
-            this.fetchUserData(resp);
+            return this.fetchUserData(resp);
         }).always(() => {
             this.loading = false;
         });
@@ -289,17 +321,6 @@ let RaffleHost = {
         document.removeEventListener("keydown", this._keyListener);
     },
     methods: {
-        get: function (url) {
-            return $.getJSON(url).then(resp => { return resp; });
-        },
-        fetchData: function () {
-            return this.get(atob(this.raffleDataUrl)).then(resp => {
-                if (!resp || !resp.files) return null;
-                let fdata = resp.files[`${this.raffleHost}.json`];
-                if (!fdata) return null;
-                return fdata;
-            });
-        },
         fetchUserData: function (data) {
             return this.get(data.raw_url).then(resp => {
                 if (typeof resp == "undefined" || resp == null) {
