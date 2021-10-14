@@ -60,7 +60,9 @@ var OAuthRequest = {
             if (resp == null) return;
             self.parseManifest(resp).then(self.init);
         }).always(() => {
-            this.loading = false;
+            setTimeout(function () {
+                this.loading = false;
+            }, 5000);
         });
     },
     methods: {
