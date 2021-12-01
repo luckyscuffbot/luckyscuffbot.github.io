@@ -1,4 +1,3 @@
-//
 // jQuery global opts
 $.ajaxSetup({ cache: false });
 
@@ -13,6 +12,15 @@ Vue.use(window.VueTimeago, {
 
 //
 // Mixins
+
+// Misc utils mixin
+let miscMixin = {
+    methods: {
+        generateUniqueState: function () {
+            return { "key": Math.random().toString(36).substr(2, 9), "timestamp": new Date() };
+        }
+    }
+};
 
 // Ajax utilities mixin
 let ajaxMixin = {
@@ -67,7 +75,8 @@ let storageMixin = {
 let authMixin = {
     mixins: [
         ajaxMixin,
-        storageMixin
+        storageMixin,
+        miscMixin
     ],
     data: function () {
         return {
@@ -257,9 +266,6 @@ let authMixin = {
             }
             this.authState = state.key;
             this.twitchAuthUrl = "https://id.twitch.tv/oauth2/authorize?client_id=" + this.clientId + "&redirect_uri=" + this.redirectUrl + "&response_type=code&scope=" + this.scopes + "&state=" + this.authState;
-        },
-        generateUniqueState: function () {
-            return { "key": Math.random().toString(36).substr(2, 9), "timestamp": new Date() };
         }
     }
 };
