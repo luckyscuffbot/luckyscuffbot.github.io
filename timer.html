@@ -7,7 +7,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- The page supports only a dark color schemes -->
     <meta name="color-scheme" content="dark">
-    <meta name="auth-token" content="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">
 
     <title>Authorize Lucky Scuff Bot</title>
 
@@ -79,71 +78,6 @@
                     };
                 }
             });
-
-            // new Vue({
-            //     el: "#main",
-            //     data: () => ({
-            //         minutes: 60,
-            //         formattedTime: null,
-            //         countdown: null
-            //     }),
-            //     methods: {
-            //         toHHMMSS(time) {
-            //             let sec_num = parseInt(time, 10); // don't forget the second param
-            //             let hours = Math.floor(sec_num / 3600);
-            //             let minutes = Math.floor((sec_num - (hours * 3600)) / 60);
-            //             let seconds = sec_num - (hours * 3600) - (minutes * 60);
-
-            //             if (hours < 10) { hours = "0" + hours; }
-            //             if (minutes < 10) { minutes = "0" + minutes; }
-            //             if (seconds < 10) { seconds = "0" + seconds; }
-
-            //             let output = "";
-
-            //             if (hours > 0) output += hours + ":";
-            //             if (minutes >= 0) output += minutes + ":";
-            //             if (minutes >= 0) output += seconds;
-
-            //             return output;
-            //         },
-            //         startTimer() {
-            //             let seconds = this.minutes; // initial time
-            //             let et = this.$refs.elaspedTime;
-
-            //             et.style.width = '100%';
-
-            //             this.countdown = setInterval(() => {
-            //                 this.minutes--;
-            //                 this.formattedTime = this.toHHMMSS(this.minutes);
-
-            //                 et.style.width = (100 - (((seconds - this.minutes) * 100) / seconds)) + '%';
-
-            //                 if (this.minutes === 0) {
-            //                     this.stopTimer();
-            //                 }
-            //             }, 1000);
-            //         },
-            //         stopTimer() {
-            //             clearInterval(this.countdown);
-            //             this.minutes = 60;
-            //         }
-            //     },
-            //     init: function () {
-            //         // Check for auth code from redirect
-            //         let uri = window.location.search.substring(1);
-            //         let params = new URLSearchParams(uri);
-
-            //         let key = params.get("key");
-            //         let time = params.get("minutes");
-
-            //         if (!time){
-            //             time = this.minutes;
-            //         }
-            //     },
-            //     mounted: function () {
-            //         this.startTimer();
-            //     },
-            // });
         });
     </script>
 </body>
