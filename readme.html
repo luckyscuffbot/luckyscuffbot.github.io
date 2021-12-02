@@ -46,7 +46,8 @@
                 </div>
                 <div>
                     <ul>
-                        <li><strong><code>!startraffle ![keyword]</code></strong>
+                        <li>
+                            <strong><code class="anchor">!startraffle [keyword]</code></strong>
                             <blockquote>
                                 <p>Starts a new raffle using the provided but not required keyword.
                                     (<strong>Note</strong>: <em>if no keyword is provided your user defined keyword
@@ -54,31 +55,31 @@
                             </blockquote>
                             <h5>Arugments:</h5>
                             <blockquote>
-                                <p><strong><code>![keyword]</code></strong> - The raffle entry keyword in order to join
+                                <p><strong><code>[keyword]</code></strong> &mdash; The raffle entry keyword in order to
+                                    join
                                     the on going raffle.</p>
                             </blockquote>
-                            <h5>Example:
-                                <small><kbd>!startraffle !test</kbd></small>
-                            </h5>
+                            <h6>Example:
+                                <small class="fs-6"><kbd>!startraffle !test</kbd></small>
+                            </h6>
                             <blockquote>
-                                <p>&mdash; This will start a raffle that people can join by typing
-                                    <kbd>!test</kbd> in chat
-                                </p>
+                                <small>&mdash; This will start a raffle that people can join by typing
+                                    <kbd>!test</kbd> in chat</small>
                             </blockquote>
                         </li>
-                        <li><strong><code>!endraffle</code></strong>
+                        <li><strong><code class="anchor">!endraffle</code></strong>
                             <blockquote>
                                 <p>Stops the current on going raffle</p>
                             </blockquote>
                         </li>
-                        <li><strong><code>!draw</code></strong>
+                        <li><strong><code class="anchor">!draw</code></strong>
                             <blockquote>
                                 <p>Draws a winner from the current on going raffle. (<strong>Note</strong>: <em>if there
                                         are no known entries in the current raffle when a winner is being selected, then
                                         the current raffle will end automatically</em>)</p>
                             </blockquote>
                         </li>
-                        <li><strong><code>!redraw</code></strong>
+                        <li><strong><code class="anchor">!redraw</code></strong>
                             <blockquote>
                                 <p>Draws a new winner from the current on going raffle. This will replace the current
                                     winner that was chosen. (<strong>Note</strong>: <em>if there are no known entries in
@@ -86,14 +87,14 @@
                                         will end automatically</em>)</p>
                             </blockquote>
                         </li>
-                        <li><strong><code>!confirm</code></strong>
+                        <li><strong><code class="anchor">!confirm</code></strong>
                             <blockquote>
                                 <p>Confirms the current winner that is chosen by <strong><code>!draw</code></strong>
                                     command. This must be done before LSP can be distributed to everyone who joined the
                                     raffle.</p>
                             </blockquote>
                         </li>
-                        <li><strong><code>!undo</code></strong>
+                        <li><strong><code class="anchor">!undo</code></strong>
                             <blockquote>
                                 <p>Similiar to <strong><code>!redraw</code></strong>, it will revert the current winner,
                                     but does not automatically select a new winner. User must initiate another
@@ -109,13 +110,45 @@
                 <div>
                     <ul>
                         <li>
-                            <p><strong><code>!lsp</code></strong></p>
+                            <p><strong><code class="anchor">!lsp</code></strong></p>
                             <blockquote>
                                 <p>Command to check the user’s current LSP percentage</p>
                             </blockquote>
                         </li>
                         <li>
-                            <p><strong><code>!addlsp [@username] [lsp amount]</code></strong></p>
+                            <p><strong><code class="anchor">!lspgiveaway [duration] | [action]</code></strong></p>
+                            <blockquote>
+                                <p>Command to start a timed LSP giveaway to award up to 3 users from chat
+                                    additional LSP, after joining the giveaway</p>
+                            </blockquote>
+                            <h5>Arugments:</h5>
+                            <blockquote>
+                                <p><strong><code>[duration]</code></strong> <small><kbd>Optional</kbd></small> &mdash;
+                                    The
+                                    duration (in minutes) that the giveaway will run. (<strong>Note:</strong>
+                                    <em>The duration amount will always be considered a
+                                        positive number and has to be greater than 0</em>)
+                                </p>
+                            </blockquote>
+                            <blockquote>
+                                <p><strong><code>[action]</code></strong> <small><kbd>Optional</kbd></small> &mdash;
+                                    Optional
+                                    parameter to run one of the following additional action(s) with this command:
+                                <ol class="list-group col-lg-4">
+                                    <li class="list-group-item d-flex justify-content-between align-items-start">
+                                        <div class="mb-1 me-auto">
+                                            <div><kbd>stop</kbd>
+                                                <small> &mdash; Stops the current
+                                                    on going giveaway</small>
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ol>
+                                </p>
+                            </blockquote>
+                        </li>
+                        <li>
+                            <p><strong><code class="anchor">!addlsp [@username] [lsp amount]</code></strong></p>
                             <blockquote>
                                 <p>Adds amount of LSP to the user specified via the command arguments.</p>
                             </blockquote>
@@ -131,54 +164,60 @@
                                         positive number. You cannot subtract LSP from a chat user please see
                                         <strong><code>!setlsp</code></strong></em>)</p>
                             </blockquote>
-                            <h5>Example:
-                                <small><kbd>!addlsp @cool_chat_user01 5</kbd></small>
-                            </h5>
+                            <h6>Example:
+                                <small class="fs-6"><kbd>!addlsp @cool_chat_user01 5</kbd></small>
+                            </h6>
                             <blockquote>
-                                <p>&mdash; This will add <strong>5</strong> LSP to <strong>cool_chat_user01</strong></p>
+                                <small>&mdash; This will add <strong>5</strong> LSP to
+                                    <strong>cool_chat_user01</strong></small>
                             </blockquote>
                         </li>
                         <li>
-                            <p><strong><code>!addlsp all [lsp amount]</code></strong></p>
+                            <p><strong><code class="anchor">!addlsp all [lsp amount]</code></strong></p>
                             <blockquote>
                                 <p>Adds amount of LSP to all users who participated in the last raffle</p>
                             </blockquote>
                             <h5>Arugments:</h5>
                             <blockquote>
-                                <p><strong><code>[lsp amount]</code></strong> - The amount of LSP that will be given to
+                                <p><strong><code>[lsp amount]</code></strong> &mdash; The amount of LSP that will be
+                                    given to
                                     the users. (<strong>Note:</strong> <em>LSP amount will always be considered a
                                         positive number. You cannot subtract LSP from a chat user please see:
                                         <strong><code>!setlsp</code></strong> command</em>)</p>
                             </blockquote>
-                            <h5>Example:
-                                <small><kbd>!addlsp @cool_chat_user01 5</kbd></small>
-                            </h5>
+                            <h6>Example:
+                                <small class="fs-6"><kbd>!addlsp @cool_chat_user01 5</kbd></small>
+                            </h6>
                             <blockquote>
-                                <p>&mdash; This will add <strong>5</strong> LSP to <strong>cool_chat_user01</strong></p>
+                                <small>&mdash; This will add <strong>5</strong> LSP to
+                                    <strong>cool_chat_user01</strong></small>
                             </blockquote>
                         </li>
                         <li>
-                            <p><strong><code>!setlsp [@username] [lsp amount]</code></strong></p>
+                            <p><strong><code class="anchor">!setlsp [@username] [lsp amount]</code></strong></p>
                             <blockquote>
                                 <p>Set the amount of LSP for a user</p>
                             </blockquote>
                             <h5>Arugments:</h5>
                             <blockquote>
-                                <p><strong><code>[@username]</code></strong> - The chat username that the LSP will be
+                                <p><strong><code>[@username]</code></strong> &mdash; The chat username that the LSP will
+                                    be
                                     given to. ‘@’ is not required, but the command supports using the built in chat
                                     autocomplete functionality</p>
                             </blockquote>
                             <blockquote>
-                                <p><strong><code>[lsp amount]</code></strong> - The amount of LSP that will be set for
+                                <p><strong><code>[lsp amount]</code></strong> &mdash; The amount of LSP that will be set
+                                    for
                                     the chat user. (<strong>Note:</strong> <em>LSP amount will always be considered a
                                         positive number. You cannot subtract LSP from a chat user please see
                                         <strong><code>!setlsp</code></strong></em>)</p>
                             </blockquote>
-                            <h5>Example:
-                                <small><kbd>!setlsp @cool_chat_user01 5</kbd></small>
-                            </h5>
+                            <h6>Example:
+                                <small class="fs-6"><kbd>!setlsp @cool_chat_user01 5</kbd></small>
+                            </h6>
                             <blockquote>
-                                <p>&mdash; This will set <strong>cool_chat_user01</strong> LSP to <strong>5</strong></p>
+                                <small>&mdash; This will set <strong>cool_chat_user01</strong> LSP to
+                                    <strong>5</strong></small>
                             </blockquote>
                         </li>
                     </ul>
@@ -201,9 +240,16 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4"
         crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/anchor-js/anchor.min.js"></script>
     <script>
         $(function () {
-            $("body").tooltip({ selector: '[data-bs-toggle=tooltip]' });
+            anchors.options = {
+                placement: 'right',
+                visible: 'hover',
+                icon: '#',
+                class: "fs-5"
+            };
+            anchors.add('.anchor');
         });
     </script>
 </body>
