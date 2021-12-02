@@ -47,7 +47,9 @@
                 <div>
                     <ul>
                         <li>
-                            <strong><code class="anchor">!startraffle [keyword]</code></strong>
+                            <strong>
+                                <code class="anchor">!startraffle [keyword] <i class="bi bi-info-circle" data-bs-toggle="tooltip"  data-bs-original-title="Optional Argument"></i></code>
+                            </strong>
                             <blockquote>
                                 <p>Starts a new raffle using the provided but not required keyword.
                                     (<strong>Note</strong>: <em>if no keyword is provided your user defined keyword
@@ -55,7 +57,8 @@
                             </blockquote>
                             <h5>Arugments:</h5>
                             <blockquote>
-                                <p><strong><code>[keyword]</code></strong> &mdash; The raffle entry keyword in order to
+                                <p><strong><code>[keyword]</code></strong> <small><kbd>Optional</kbd></small> &mdash;
+                                    The raffle entry keyword in order to
                                     join
                                     the on going raffle.</p>
                             </blockquote>
@@ -116,10 +119,17 @@
                             </blockquote>
                         </li>
                         <li>
-                            <p><strong><code class="anchor">!lspgiveaway [duration] | [action]</code></strong></p>
+                            <p>
+                                <strong>
+                                    <code
+                                        class="anchor">!lspgiveaway [duration] <i class="bi bi-info-circle" data-bs-toggle="tooltip" data-bs-original-title="Optional Argument"></i> | [action] <i class="bi bi-info-circle" data-bs-toggle="tooltip"  data-bs-original-title="Optional Argument"></i></code>
+                                </strong>
+                            </p>
                             <blockquote>
                                 <p>Command to start a timed LSP giveaway to award up to 3 users from chat
-                                    additional LSP, after joining the giveaway</p>
+                                    additional LSP (after joining the giveaway). (<strong>Note</strong>: <em>if no
+                                        duration is provided your user defined giveaway duration
+                                        setting will be used [This is configurable via a setting]</em>)</p>
                             </blockquote>
                             <h5>Arugments:</h5>
                             <blockquote>
@@ -161,7 +171,7 @@
                             <blockquote>
                                 <p><strong><code>[lsp amount]</code></strong> - The amount of LSP that will be given to
                                     the chat user. (<strong>Note:</strong> <em>LSP amount will always be considered a
-                                        positive number. You cannot subtract LSP from a chat user please see
+                                        positive number. You cannot subtract LSP from a user please see
                                         <strong><code>!setlsp</code></strong></em>)</p>
                             </blockquote>
                             <h6>Example:
@@ -243,12 +253,15 @@
     <script src="https://cdn.jsdelivr.net/npm/anchor-js/anchor.min.js"></script>
     <script>
         $(function () {
+            $("body").tooltip({ selector: '[data-bs-toggle=tooltip]' });
+
             anchors.options = {
                 placement: 'right',
                 visible: 'hover',
                 icon: '#',
-                class: "fs-5"
+                class: 'fs-5'
             };
+
             anchors.add('.anchor');
         });
     </script>
