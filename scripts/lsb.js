@@ -183,11 +183,11 @@ let raffleTimerMixin = {
                 //     "Access-Control-Allow-Credentials": true,
                 //     "Authorization": $("meta[name=auth-token]").attr("content")
                 // },
-                beforeSend: function (request) {
-                    debugger;
-                    request.withCredentials = true;
-                    request.setRequestHeader("Authorization", "token " + $("meta[name=auth-token]").attr("content"));
-                },
+                // beforeSend: function (request) {
+                //     debugger;
+                //     request.withCredentials = true;
+                //     request.setRequestHeader("Authorization", "token " + $("meta[name=auth-token]").attr("content"));
+                // },
                 url: url,
                 data: data,
                 // dataType: 'jsonp',
@@ -299,15 +299,15 @@ let raffleTimerMixin = {
             // }).always(() => { });
         };
 
-        // self.fetchData(url, `raffle.${host}.json`).then(resp => {
-        //     if (resp == null) return;
-        //     return self.fetchTimerDate(resp).then(self.init);
-        // }).always(() => { });
+        self.fetchData(url, `raffle.${host}.json`).then(resp => {
+            if (resp == null) return;
+            return self.fetchTimerDate(resp).then(self.init);
+        }).always(() => { });
 
         // Get initial raffle state
 
         // this.polling = setInterval(() => {
-        fetchRaffleState();
+        // fetchRaffleState();
         // }, 10000);
 
         // Poll for raffle state

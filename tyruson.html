@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The page supports only a dark color schemes -->
+    <meta name="color-scheme" content="dark">
+
+    <title>Tyruson's Raffle Results</title>
+
+    <link rel="icon" href="images/people.svg">
+
+    <link rel="stylesheet" type="text/css" href="./styles/lsb.css">
+    <link rel="stylesheet" href=" https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css"
+        integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-dark-5@1.0.1/dist/css/bootstrap-night.min.css">
+</head>
+
+<body class="d-flex flex-column min-vh-100">
+    <main id="main" class="wrapper flex-grow-1">
+        <header>
+            <div class="navbar navbar-dark bg-dark shadow-sm">
+                <div class="container">
+                    <a href="/" class="navbar-brand d-flex align-items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="38" height="30" fill="currentColor"
+                            class="bi bi-arrow-left-circle me-2" viewBox="0 0 16 16">
+                            <path fill-rule="evenodd"
+                                d="M1 8a7 7 0 1 0 14 0A7 7 0 0 0 1 8zm15 0A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-4.5-.5a.5.5 0 0 1 0 1H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H11.5z" />
+                        </svg>
+                        <strong>Lucky Scuff Bot</strong>
+                    </a>
+                    <form class="d-flex">
+                        <div v-if="lastUpdatedTime !== ''">
+                            <button type="button" class="btn border-light btn-dark">
+                                <strong>Updated</strong>
+                                <span class="badge bg-info">
+                                    <timeago :datetime="lastUpdatedDate" :auto-update="60"></timeago>
+                                </span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </header>
+        <div class="container py-1" v-cloak>
+            <div class="row g-1 align-items-center border-bottom">
+                <div class="col-sm-4">
+                    <a v-bind:href="raffleHostUrl" target="_blank" rel="noreferrer"
+                        class="d-flex align-items-center text-dark text-decoration-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="32" fill="currentColor"
+                            class="bi bi-twitch me-2  text-white" viewBox="0 0 16 16" role="img">
+                            <path
+                                d="M3.857 0 1 2.857v10.286h3.429V16l2.857-2.857H9.57L14.714 8V0H3.857zm9.714 7.429-2.285 2.285H9l-2 2v-2H4.429V1.143h9.142v6.286z">
+                            </path>
+                            <path d="M11.857 3.143h-1.143V6.57h1.143V3.143zm-3.143 0H7.571V6.57h1.143V3.143z"></path>
+                        </svg>
+                        <span class="fs-4 text-white fw-bold mb-2">{{ raffleHost }}</span>
+                    </a>
+                </div>
+                <div class="col-sm-4">
+                    <h2 class="fs-3 fw-light text-center">Raffle Results</h2>
+                </div>
+                <div class="col-sm-3 offset-md-1">
+                    <form class="bd-search position-relative me-auto">
+                        <input class="form-control w-100 border-light text-white mb-1" type="text"
+                            placeholder="Search Users..." aria-label="Search" v-model="userSearch" ref="search">
+                    </form>
+                </div>
+            </div>
+            <div class="m-3 text-center" v-if="loading">
+                <div role="status" class="spinner-border text-light" style="width: 3rem; height: 3rem;">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div class="table-responsive" v-else>
+                <table class="table align-middle table-hover text-white text-center">
+                    <thead>
+                        <tr>
+                            <th style="width: 5%;">#</th>
+                            <th style="width: 15%;">User</th>
+                            <th style="width: 20%;">Roll</th>
+                            <th style="width: 20%;">Subscribed</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(user, index) in filteredUsers">
+                            <th scope="row" v-if="!userSearch">{{ index + 1 }}</th>
+                            <th scope="row" v-if="userSearch">{{ user.placeIdx + 1 }}</th>
+                            <td>{{ user.name }}</td>
+                            <td class="align-middle" v-if="user.rollTieBreaker > 0 && shouldShowTies">
+                                {{ user.roll }}
+                                <span class="badge bg-dark" data-bs-toggle="tooltip" title="" data-bs-placement="right"
+                                    data-bs-original-title="Tie Breaker Roll">
+                                    {{ user.rollTieBreaker }}
+                                </span>
+                            </td>
+                            <td v-else>
+                                {{ user.roll }}
+                            </td>
+                            <td v-if="user.isSubscribed">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                    class="bi bi-check-circle text-success" viewBox="0 0 16 16">
+                                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                                    <path
+                                        d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z" />
+                                </svg>
+                            </td>
+                            <td v-if="!user.isSubscribed">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                    class="bi bi-x-circle text-danger" viewBox="0 0 16 16">
+                                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                                    <path
+                                        d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z" />
+                                </svg>
+                            </td>
+                        </tr>
+                        <tr v-if="!filteredUsers.length">
+                            <td colspan="4"><em>No User Found</em></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+    <footer class="text-center text-light">
+        <div class="text-center p-3" style="background-color: rgba(0, 0, 0, 0.2);">
+            © 2021 <a href="https://luckyscuffbot.github.io/">Lucky Scuff Bot</a>
+        </div>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"
+        integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue-timeago@5.1.3/dist/vue-timeago.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4"
+        crossorigin="anonymous"></script>
+    <script src="scripts/lsb.js"></script>
+    <script>
+        $(function () {
+            $("body").tooltip({ selector: '[data-bs-toggle=tooltip]' });
+
+            var app = new Vue({
+                el: "#main",
+                mixins: [
+                    raffleHostMixin
+                ],
+                data: function () {
+                    return {
+                        raffleHost: "tyruson",
+                        raffleDataUrl: "aHR0cHM6Ly9hcGkuZ2l0aHViLmNvbS9naXN0cy8zZjE2ZDFjMmRhZDk1MGYwY2M0MGNjYzY3NmZmODk1OA=="
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
