@@ -1,10 +1,55 @@
+var VueEventBus = {
+    install: function (Vue, options) {
+        let getIdGenerator = function () {
+            let lastId = 0;
+            return function getNextUniqueId() {
+                lastId += 1;
+                return lastId;
+            };
+        };
+
+        Vue._subscriptions = {};
+        Vue._getNextUniqueId = getIdGenerator();
+
+        Vue.prototype.$subscribe = function subscribe(eventType, callback) {
+            const id = Vue._getNextUniqueId();
+
+            if (!Vue._subscriptions[eventType]) {
+                Vue._subscriptions[eventType] = {};
+            }
+
+            Vue._subscriptions[eventType][id] = callback;
+
+            return {
+                unsubscribe: () => {
+                    delete Vue._subscriptions[eventType][id];
+                    if (Object.keys(Vue._subscriptions[eventType]).length === 0) {
+                        delete Vue._subscriptions[eventType];
+                    }
+                }
+            }
+        };
+
+        Vue.prototype.$publish = function (eventType, arg) {
+            if (!Vue._subscriptions[eventType]) {
+                return;
+            }
+            Object.keys(Vue._subscriptions[eventType]).forEach(key => Vue._subscriptions[eventType][key](arg));
+        };
+
+    }
+};
+
 // jQuery global opts
 $.ajaxSetup({ cache: false });
 
 //
 // Register Vue plugin(s)
 
-// Timeago
+// Event bus plugin
+Vue.use(window.VueEventBus);
+
+// Timeago plugin
 Vue.use(window.VueTimeago, {
     name: 'timeago',
     locale: 'en-US'
@@ -18,6 +63,73 @@ let miscMixin = {
     methods: {
         generateUniqueState: function () {
             return { "key": Math.random().toString(36).substr(2, 9), "timestamp": new Date() };
+        }
+    }
+};
+
+// Websock client mixin
+let webSocketMixin = {
+    data: {
+        socket: null,
+        timerId: 0
+    },
+    methods: {
+        connect: function (rootUri, protocols) {
+            if (!rootUri) {
+                return;
+            }
+
+            let url = `ws://${rootUri}`;
+
+            if (typeof protocols != "undefined" && protocols != null) {
+                this.socket = new WebSocket(url, protocols);
+            } else {
+                this.socket = new WebSocket(url);
+            }
+
+            if (this.socket == null) {
+                return;
+            }
+
+            // Wireup socket event(s) here
+            this.socket.onopen = this.opened;
+            this.socket.onclose = this.closed;
+            this.socket.onerror = this.errored;
+            this.socket.onmessage = this.message;
+        },
+        keepAlive: function (timeout = 20000) {
+            if (this.socket.readyState == this.socket.OPEN) {
+                this.socket.send('PING');
+            }
+            this.timerId = setTimeout(this.keepAlive, timeout);
+        },
+        cancelKeepAlive: function () {
+            if (this.timerId) {
+                clearTimeout(this.timerId);
+            }
+        },
+        opened: function (event) {
+            console.log("[open] Connection established");
+            console.log("Sending to server");
+
+            this.socket.send("Hello from timer overlay!");
+
+            this.keepAlive();
+        },
+        closed: function (event) {
+            if (event.wasClean) {
+                console.log(`[close] Connection closed cleanly, code=${event.code} reason=${event.reason}`);
+            } else {
+                // e.g. server process killed or network down
+                // event.code is usually 1006 in this case
+                console.log('[close] Connection died');
+            }
+        },
+        errored: function (error) {
+            console.log(`[error] ${error.message}`);
+        },
+        message: function (event) {
+            this.$publish("message", event);
         }
     }
 };
@@ -75,10 +187,12 @@ let storageMixin = {
 let raffleTimerMixin = {
     mixins: [
         ajaxMixin,
-        miscMixin
+        miscMixin,
+        webSocketMixin
     ],
     data: function () {
         return {
+            isTokenMissing: false,
             queryTime: null,
             lastUpdatedDate: null,
             isRunning: false,
@@ -86,7 +200,8 @@ let raffleTimerMixin = {
             keyword: null,
             minutes: 0,
             countdown: null,
-            polling: null
+            polling: null,
+            events: []
         }
     },
     computed: {
@@ -99,37 +214,13 @@ let raffleTimerMixin = {
     methods: {
         init: function () {
             setTimeout(() => {
+                // Check if we're already running timer & can run a new one
                 if (!this.isRunning && this.canRun) {
                     this.isRunning = true;
-
+                    // Start timer
                     this.startTimer();
-                } else {
-
                 }
             }, 150);
-        },
-        formatTime: function (time) {
-            let output = "";
-
-            if (!time) {
-                return output;
-            }
-
-            let sec_num = parseInt(time, 10); // don't forget the second param
-            let hours = Math.floor(sec_num / 3600);
-            let minutes = Math.floor((sec_num - (hours * 3600)) / 60);
-            let seconds = sec_num - (hours * 3600) - (minutes * 60);
-
-            if (hours < 10) { hours = "0" + hours; }
-            if (minutes < 10) { minutes = "0" + minutes; }
-            if (seconds < 10) { seconds = "0" + seconds; }
-
-
-            if (hours > 0) output += hours + ":";
-            if (minutes >= 0) output += minutes + ":";
-            if (minutes >= 0) output += seconds;
-
-            return output;
         },
         startTimer: function () {
             this.$nextTick(
@@ -157,10 +248,34 @@ let raffleTimerMixin = {
             );
         },
         stopTimer: function () {
+            // Stop current timer and reset for next run
             clearInterval(this.countdown);
             this.minutes = 0;
             this.isRunning = false;
             this.canRun = false;
+        },
+        formatTime: function (time) {
+            let output = "";
+
+            if (!time) {
+                return output;
+            }
+
+            let sec_num = parseInt(time, 10); // don't forget the second param
+            let hours = Math.floor(sec_num / 3600);
+            let minutes = Math.floor((sec_num - (hours * 3600)) / 60);
+            let seconds = sec_num - (hours * 3600) - (minutes * 60);
+
+            if (hours < 10) { hours = "0" + hours; }
+            if (minutes < 10) { minutes = "0" + minutes; }
+            if (seconds < 10) { seconds = "0" + seconds; }
+
+
+            if (hours > 0) output += hours + ":";
+            if (minutes >= 0) output += minutes + ":";
+            if (minutes >= 0) output += seconds;
+
+            return output;
         },
         fetchTimerDate: function (data) {
             return this.get(data.raw_url).then(resp => {
@@ -172,35 +287,10 @@ let raffleTimerMixin = {
                 this.canRun = resp.raffleRunning;
                 this.keyword = resp.keyword;
             });
-        },
-        postCORS: function (url, data, func) {
-            if (func == undefined) func = function () { };
-            return $.ajax({
-                type: 'GET',
-                // headers: {
-                //     "Access-Control-Allow-Origin": "*",
-                //     "Access-Control-Allow-Headers": "X-Requested-With",
-                //     "Access-Control-Allow-Credentials": true,
-                //     "Authorization": $("meta[name=auth-token]").attr("content")
-                // },
-                // beforeSend: function (request) {
-                //     debugger;
-                //     request.withCredentials = true;
-                //     request.setRequestHeader("Authorization", "token " + $("meta[name=auth-token]").attr("content"));
-                // },
-                url: url,
-                data: data,
-                // dataType: 'jsonp',
-                crossDomain: true,
-                xhrFields: { withCredentials: true },
-                success: function (res) { func(res) },
-                error: function () {
-                    func({})
-                }
-            });
         }
     },
     beforeDestroy: function () {
+        // Cleanup timer stuff
         clearInterval(this.polling);
     },
     mounted: function () {
@@ -211,107 +301,49 @@ let raffleTimerMixin = {
         let params = new URLSearchParams(uri);
 
         let host = params.get("host");
-        let gid = params.get("gid");
+        let token = params.get("token");
         let time = params.get("time");
 
-        if (!host || !gid) {
+        let root = "456f-24-56-35-125.ngrok.io/ws";
+
+        if (!host) return;
+        if (!token) {
             return;
         }
 
-        if (!time) {
-            time = this.minutes;
-        } else {
-            this.minutes = time;
-        }
+        // self.$set(self.isTokenMissing, false);
+        self.isTokenMissing = false;
 
-        self.queryTime = time;
+        // Connect to ws server
+        self.connect(root, ["client", token]);
 
-        let url = "https://api.github.com/gists/" + gid;
+        // Subscribe to socket message(s) coming in
+        this.$subscribe("message", function (event) {
+            console.log(`[message] Data received from server: ${event.data}`);
 
-        let fetchRaffleState = function () {
-            if (self.isRunning && self.minutes > 0) {
-                clearInterval(self.polling);
+            let data = null;
 
-                self.polling = setInterval(() => {
-                    fetchRaffleState();
-                }, (self.queryTime + 2) * 1000);
-            } else {
+            try {
+                data = JSON.parse(event.data);
+            } catch (e) {
 
             }
+            if (data == null) return;
+            if (data.Event == null) return;
 
-            self.postCORS(url, {}).done(function (rsp) {
-                var resp = rsp.data;
-                var fileName = `raffle.${host}.json`;
-
-                if (!resp || !resp.files)
-                    return null;
-
-                let fkeys = Object.keys(resp.files);
-                if (!fkeys || fkeys.length == 0)
-                    return null;
-
-                let fdata = null;
-                if (fileName) {
-                    fdata = resp.files[fileName];
-                } else {
-                    fdata = resp.files[fkeys[0]];
+            switch (data.Event) {
+                case "RAFFLE_STARTED": {
+                    self.keyword = data.Keyword;
+                    self.minutes = data.Duration;
+                    self.canRun = true;
+                    self.init();
+                    break;
                 }
-
-                // Use current file contents
-                var furl = fdata.raw_url;
-                var data = JSON.parse(fdata.content);
-
-                self.lastUpdatedTime = data.lastUpdated;
-                self.lastUpdatedDate = new Date(data.lastUpdated);
-                self.canRun = data.raffleRunning;
-                self.keyword = data.keyword;
-
-                self.init();
-
-                // self.postCORS(furl)
-                //     .done(function (resp) {
-                //         if (typeof resp == "undefined" || resp == null) {
-                //             return;
-                //         }
-                //         this.lastUpdatedTime = resp.lastUpdated;
-                //         this.lastUpdatedDate = new Date(resp.lastUpdated);
-                //         this.canRun = resp.raffleRunning;
-                //         this.keyword = resp.keyword;
-                //     }).fail(function (err) {
-
-                //     }).always(function () {
-                //         self.init();
-                //     });
-            });
-
-            // Check if we're already running a raffle timer
-            // if (isPolling && self.isRunning && self.minutes > 0) {
-            //     // Check again after timer would have ended
-            //     setTimeout(fetchRaffleState, this.queryTime * 1000);
-            // } else {
-            //     setTimeout(() => {
-            //         fetchRaffleState(true);
-            //     }, 10000);
-            // }
-            // self.fetchData(url, `raffle.${host}.json`).then(resp => {
-            //     if (resp == null) return;
-            //     return self.fetchTimerDate(resp);
-            // }).always(() => { });
-        };
-
-        self.fetchData(url, `raffle.${host}.json`).then(resp => {
-            if (resp == null) return;
-            return self.fetchTimerDate(resp).then(self.init);
-        }).always(() => { });
-
-        // Get initial raffle state
-
-        // this.polling = setInterval(() => {
-        // fetchRaffleState();
-        // }, 10000);
-
-        // Poll for raffle state
-
+                case "RAFFLE_ENDED":
+                    self.stopTimer();
+                    break;
+            }
+        });
     }
 };
 

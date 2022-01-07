@@ -28,13 +28,20 @@
         }
 
         body {
-            background-color: rgba(255, 255, 255, 0.6);
+            background-color: rgba(0, 0, 0, 0.5);
         }
     </style>
 </head>
 
 <body class="d-flex flex-column min-vh-100">
-    <main id="main" class="wrapper flex-grow-1">
+    <main id="main" class="wrapper flex-grow-1" v-cloak>
+        <div class="container py-3 w-25" v-show="isTokenMissing">
+            <div class="alert alert-danger text-center" role="alert">
+                <p class="m-0">
+                    Authorization Token Missing!
+                </p>
+            </div>
+        </div>
         <div class="container py-2" v-if="isRunning">
             <div class="container py-2">
                 <h1 class="text-center display-1 outline" style="font-weight: 400;">Keyword: {{ keyword }}</h1>
@@ -53,7 +60,6 @@
                 </div>
             </div>
         </div>
-        </div>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"
         integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
@@ -68,42 +74,15 @@
     <script src="scripts/lsb.js"></script>
     <script>
         $(function () {
-            let url = "ws://8b2f-68-3-248-40.ngrok.io";
-
-            let socket = new WebSocket(url);
-
-            socket.onopen = function (e) {
-                console.log("[open] Connection established");
-                console.log("Sending to server");
-                socket.send("My name is John");
-            };
-
-            socket.onmessage = function (event) {
-                console.log(`[message] Data received from server: ${event.data}`);
-            };
-
-            socket.onclose = function (event) {
-                if (event.wasClean) {
-                    console.log(`[close] Connection closed cleanly, code=${event.code} reason=${event.reason}`);
-                } else {
-                    // e.g. server process killed or network down
-                    // event.code is usually 1006 in this case
-                    console.log('[close] Connection died');
-                }
-            };
-
-            socket.onerror = function (error) {
-                console.log(`[error] ${error.message}`);
-            };
-
-            $("body").tooltip({ selector: '[data-bs-toggle=tooltip]' });
-
             var app = new Vue({
                 el: "#main",
                 mixins: [raffleTimerMixin],
                 data: function () {
                     return {
+                        minutes: -1,
+                        isTokenMissing: true,
                         isRunning: false,
+                        canRun: false,
                         keyword: "!test"
                     };
                 }
