@@ -79,7 +79,7 @@ let webSocketMixin = {
                 return;
             }
 
-            let url = `ws://${rootUri}`;
+            let url = `wss://${rootUri}`;
 
             if (typeof protocols != "undefined" && protocols != null) {
                 this.socket = new WebSocket(url, protocols);
