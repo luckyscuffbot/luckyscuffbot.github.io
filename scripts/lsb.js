@@ -71,9 +71,30 @@ let miscMixin = {
 let webSocketMixin = {
     data: {
         socket: null,
-        timerId: 0
+        timerId: 0,
+        currEnv: 0,
+        ENV: Object.freeze({
+            "UNKNOWN": 0,
+            "DEV": 1,
+            "PROD": 2
+        })
+    },
+    beforeMount: function () {
+        this.determineEnv();
     },
     methods: {
+        determineEnv: function () {
+            switch (window.location.protocol) {
+                case "http:":
+                case "https:":
+                    this.currEnv = this.ENV.PROD;
+                    break;
+                case "file:":
+                default:
+                    this.currEnv = this.ENV.DEV;
+                    break;
+            }
+        },
         connect: function (rootUri, protocols) {
             if (!rootUri) {
                 return;
@@ -97,9 +118,9 @@ let webSocketMixin = {
             this.socket.onerror = this.errored;
             this.socket.onmessage = this.message;
         },
-        keepAlive: function (timeout = 20000) {
+        keepAlive: function (timeout = 30000) {
             if (this.socket.readyState == this.socket.OPEN) {
-                this.socket.send('PING');
+                this.socket.send('ping');
             }
             this.timerId = setTimeout(this.keepAlive, timeout);
         },
@@ -108,27 +129,37 @@ let webSocketMixin = {
                 clearTimeout(this.timerId);
             }
         },
-        opened: function (event) {
-            console.log("[open] Connection established");
-            console.log("Sending to server");
-
-            this.socket.send("Hello from timer overlay!");
-
-            this.keepAlive();
+        opened: function () {
+            if (this.currEnv == this.ENV.DEV) {
+                console.log("[open] Connection established");
+                console.log("Sending to server");
+            }
+            // Start keep alive pulse
+            //this.keepAlive();
         },
         closed: function (event) {
             if (event.wasClean) {
-                console.log(`[close] Connection closed cleanly, code=${event.code} reason=${event.reason}`);
+                if (this.currEnv == this.ENV.DEV) {
+                    console.log(`[close] Connection closed cleanly, code=${event.code} reason=${event.reason}`);
+                }
             } else {
                 // e.g. server process killed or network down
                 // event.code is usually 1006 in this case
-                console.log('[close] Connection died');
+                if (this.currEnv == this.ENV.DEV) {
+                    console.log('[close] Connection died');
+                }
             }
         },
         errored: function (error) {
-            console.log(`[error] ${error.message}`);
+            if (this.currEnv == this.ENV.DEV) {
+                console.log(`[error] ${error.message}`);
+            }
         },
         message: function (event) {
+            if (this.currEnv == this.ENV.DEV) {
+                console.log(`[message] Data received from server: ${event.data}`);
+            }
+            // Emit message event
             this.$publish("message", event);
         }
     }
@@ -197,8 +228,10 @@ let raffleTimerMixin = {
             lastUpdatedDate: null,
             isRunning: false,
             canRun: false,
+            host: null,
             keyword: null,
             minutes: 0,
+            minutesOverride: 0,
             countdown: null,
             polling: null,
             events: []
@@ -311,7 +344,8 @@ let raffleTimerMixin = {
             return;
         }
 
-        // self.$set(self.isTokenMissing, false);
+        self.host = host;
+        self.minutesOverride = time;
         self.isTokenMissing = false;
 
         // Connect to ws server
@@ -319,8 +353,6 @@ let raffleTimerMixin = {
 
         // Subscribe to socket message(s) coming in
         this.$subscribe("message", function (event) {
-            console.log(`[message] Data received from server: ${event.data}`);
-
             let data = null;
 
             try {
@@ -328,18 +360,34 @@ let raffleTimerMixin = {
             } catch (e) {
 
             }
-            if (data == null) return;
-            if (data.Event == null) return;
+
+            // Null data event
+            if (data == null || data.Event == null) {
+                return;
+            }
+
+            // Double check event's HostID matches our host
+            if (data.HostID != self.host) {
+                return;
+            }
 
             switch (data.Event) {
-                case "RAFFLE_STARTED": {
+                case "RAFFLE_STARTED":
+                    self.canRun = true;
+
                     self.keyword = data.Keyword;
                     self.minutes = data.Duration;
-                    self.canRun = true;
+
+                    // Check for override time
+                    if (self.minutesOverride > 0) {
+                        self.minutes = self.minutesOverride;
+                    }
+
+                    // Start timer
                     self.init();
                     break;
-                }
                 case "RAFFLE_ENDED":
+                    // Stop timer
                     self.stopTimer();
                     break;
             }
