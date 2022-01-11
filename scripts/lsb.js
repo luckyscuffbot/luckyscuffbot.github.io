@@ -665,7 +665,7 @@ let raffleHostMixin = {
         self.cleanup();
 
         // Done loading
-        setTimeout(() => { self.loading = false; }, 1);
+        setTimeout(() => { self.loading = false; }, 150);
     },
     beforeDestroy: function () {
         document.removeEventListener("keydown", this._keyListener);
