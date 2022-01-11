@@ -33,3 +33,12 @@
     border: 1px solid #dee2e6;
     border-radius: .125rem;
 }
+
+.gist {
+    width: 1px !important;
+    height: 0px !important;
+}
+
+.gist-meta {
+    display: none;
+}

@@ -139,22 +139,16 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4"
         crossorigin="anonymous"></script>
+    <script src="https://gist.github.com/zhr0git/5692a95ed8d65d6ab54c1682c1850973.js"></script>
     <script src="scripts/lsb.js"></script>
     <script>
-        $(function () {
+        $(() => {
             $("body").tooltip({ selector: '[data-bs-toggle=tooltip]' });
 
             var app = new Vue({
                 el: "#main",
-                mixins: [
-                    raffleHostMixin
-                ],
-                data: function () {
-                    return {
-                        raffleHost: "drazthepally",
-                        raffleDataUrl: "aHR0cHM6Ly9hcGkuZ2l0aHViLmNvbS9naXN0cy81NjkyYTk1ZWQ4ZDY1ZDZhYjU0YzE2ODJjMTg1MDk3Mw=="
-                    }
-                }
+                mixins: [raffleHostMixin],
+                data: () => { return { raffleHost: "drazthepally" } }
             });
         });
     </script>

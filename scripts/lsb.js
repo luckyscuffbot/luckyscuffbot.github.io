@@ -629,14 +629,8 @@ let raffleHostMixin = {
             return tiedUsers && tiedUsers.length > 1;
         }
     },
-    mounted: function () {
-        this.fetchData(this.raffleDataUrl, `${this.raffleHost}.json`).then(resp => {
-            if (resp == null) return;
-            return this.fetchUserData(resp);
-        }).always(() => {
-            this.loading = false;
-        });
-
+    beforeMount: function () {
+        // Bind to Ctrl + f , for search box
         this.keyListener = function (e) {
             if (e.key === "f" && (e.ctrlKey || e.metaKey)) {
                 e.preventDefault();
@@ -644,30 +638,61 @@ let raffleHostMixin = {
                 this.$refs.search.focus();
             }
         };
-
         document.addEventListener("keydown", this.keyListener.bind(this));
+    },
+    mounted: function () {
+        var self = this;
+
+        // Get embedded raffle results
+        var data = self.fetchData(this.raffleHost);
+        if (data == null) {
+            self.loading = false;
+            return;
+        }
+
+        self.lastUpdatedTime = data.lastUpdated;
+        self.lastUpdatedDate = new Date(data.lastUpdated);
+
+        // Sort by highest roll, then by tie breaking roll (if any)
+        self.users = data.users
+            .sort((a, b) => b.roll - a.roll || b.rollTieBreaker - a.rollTieBreaker)
+            .map((user, idx) => {
+                user.placeIdx = idx;
+                return user;
+            });
+
+        // Cleanup
+        self.cleanup();
+
+        // Done loading
+        setTimeout(() => { self.loading = false; }, 1);
     },
     beforeDestroy: function () {
         document.removeEventListener("keydown", this._keyListener);
     },
     methods: {
-        fetchUserData: function (data) {
-            return this.get(data.raw_url).then(resp => {
-                if (typeof resp == "undefined" || resp == null) {
-                    return;
-                }
+        fetchData: function (hostName) {
+            var embeddedKey = `table[data-tagsearch-path='${hostName}.json']`;
+            var embeddedData = $(embeddedKey).find("td:contains('lastUpdated')");
 
-                this.lastUpdatedTime = resp.lastUpdated;
-                this.lastUpdatedDate = new Date(resp.lastUpdated);
+            if (!embeddedData.length) {
+                return null;
+            }
 
-                // Sort by highest roll, then by tie breaking roll (if any)
-                this.users = resp.users
-                    .sort((a, b) => b.roll - a.roll || b.rollTieBreaker - a.rollTieBreaker)
-                    .map((user, idx) => {
-                        user.placeIdx = idx;
-                        return user;
-                    });
-            });
+            var data = null;
+            try {
+                data = JSON.parse(embeddedData.text());
+            } catch (ex) {
+                // Ignore
+            }
+
+            return data;
+        },
+        cleanup: function () {
+            // Cleanup embedded data
+            $(".gist").remove();
+            $("link[rel=stylesheet][href*='githubassets.com']").remove();
+            $("script[src*='github.com']").remove();
         }
     }
 };
