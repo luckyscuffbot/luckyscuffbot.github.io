@@ -1,5 +1,7 @@
 var VueEventBus = {
     install: function (Vue, options) {
+        Vue._subscriptions = {};
+
         let getIdGenerator = function () {
             let lastId = 0;
             return function getNextUniqueId() {
@@ -8,7 +10,6 @@ var VueEventBus = {
             };
         };
 
-        Vue._subscriptions = {};
         Vue._getNextUniqueId = getIdGenerator();
 
         Vue.prototype.$subscribe = function subscribe(eventType, callback) {
@@ -593,6 +594,8 @@ let authMixin = {
         }
     }
 };
+
+
 
 // Raffle host mixin
 let raffleHostMixin = {
