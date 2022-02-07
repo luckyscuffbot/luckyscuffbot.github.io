@@ -338,7 +338,7 @@ let raffleTimerMixin = {
         let token = params.get("token");
         let time = params.get("time");
 
-        let root = "456f-24-56-35-125.ngrok.io/ws";
+        let root = "13ff30c89d19.ngrok.io/ws";
 
         if (!host) return;
         if (!token) {
