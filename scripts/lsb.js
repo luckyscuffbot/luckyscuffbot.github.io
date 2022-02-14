@@ -374,22 +374,26 @@ let raffleTimerMixin = {
 
             switch (data.Event) {
                 case "RAFFLE_STARTED":
-                    self.canRun = true;
+                    {
+                        self.canRun = true;
 
-                    self.keyword = data.Keyword;
-                    self.minutes = data.Duration;
+                        self.keyword = data.Keyword;
+                        self.minutes = data.Duration;
 
-                    // Check for override time
-                    if (self.minutesOverride > 0) {
-                        self.minutes = self.minutesOverride;
+                        // Check for override time
+                        if (self.minutesOverride > 0) {
+                            self.minutes = self.minutesOverride;
+                        }
+
+                        // Start timer
+                        self.init();
                     }
-
-                    // Start timer
-                    self.init();
                     break;
                 case "RAFFLE_ENDED":
-                    // Stop timer
-                    self.stopTimer();
+                    {
+                        // Stop timer
+                        self.stopTimer();
+                    }
                     break;
             }
         });

@@ -12,8 +12,8 @@
 
     <link rel="icon" href="../images/people.svg">
 
-    <link rel="preload" as="font" href="../fonts/expressway rg.woff">
-    <link rel="preload" as="font" href="../fonts/expressway.ttf">
+    <link rel="preload" as="font" href="../fonts/expressway rg.woff" type="font/woff2">
+    <link rel="preload" as="font" href="../fonts/expressway.ttf" type="font/ttf">
 
     <link rel="stylesheet" type="text/css" href="../styles/lsb.css">
 
@@ -29,6 +29,7 @@
             font-weight: 400;
             src: url('../fonts/expressway rg.woff');
             src: url('../fonts/expressway rg.woff') format('woff');
+            font-display: swap;
         }
 
         @font-face {
@@ -37,6 +38,7 @@
             font-weight: 400;
             src: url('../fonts/expressway.ttf');
             src: url('../fonts/expressway.ttf') format('truetype');
+            font-display: swap;
         }
 
         body {
@@ -45,7 +47,11 @@
         }
 
         [v-cloak] {
-            display: none
+            display: none;
+        }
+
+        .font-preload {
+            opacity: 0;
         }
 
         .outline {
@@ -94,6 +100,10 @@
             </div>
         </div>
     </main>
+    <div class="font-preload">
+        <span style="font-family: 'Expressway Rg'"></span>
+        <span style="font-family: 'Expressway'"></span>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"
         integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/vue@2" crossorigin="anonymous"></script>
