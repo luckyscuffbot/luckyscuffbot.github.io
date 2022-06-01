@@ -119,6 +119,11 @@ let webSocketMixin = {
             this.socket.onerror = this.errored;
             this.socket.onmessage = this.message;
         },
+        emit: function (message) {
+            if (this.socket) {
+                this.socket.send(message);
+            }
+        },
         keepAlive: function (timeout = 30000) {
             if (this.socket.readyState == this.socket.OPEN) {
                 this.socket.send('ping');
@@ -130,13 +135,15 @@ let webSocketMixin = {
                 clearTimeout(this.timerId);
             }
         },
-        opened: function () {
+        opened: function (event) {
             if (this.currEnv == this.ENV.DEV) {
                 console.log("[open] Connection established");
                 console.log("Sending to server");
             }
             // Start keep alive pulse
             //this.keepAlive();
+            // Emit message event
+            this.$publish("opened", event);
         },
         closed: function (event) {
             if (event.wasClean) {
@@ -224,6 +231,8 @@ let raffleTimerMixin = {
     ],
     data: function () {
         return {
+            rootUri: "luckyscuffbot.ngrok.io/ws",
+            proto: "client",
             isTokenMissing: false,
             queryTime: null,
             lastUpdatedDate: null,
@@ -338,7 +347,7 @@ let raffleTimerMixin = {
         let token = params.get("token");
         let time = params.get("time");
 
-        let root = "luckyscuffbot.ngrok.io/ws";
+        let root = this.rootUri;
 
         if (!host) return;
         if (!token) {
@@ -350,7 +359,7 @@ let raffleTimerMixin = {
         self.isTokenMissing = false;
 
         // Connect to ws server
-        self.connect(root, ["client", token]);
+        self.connect(root, [this.proto, token]);
 
         // Subscribe to socket message(s) coming in
         this.$subscribe("message", function (event) {
@@ -373,8 +382,47 @@ let raffleTimerMixin = {
             }
 
             switch (data.Event) {
+                case "INITIALIZE":
+                    {
+                        // Check for on going raffle
+                        if (!data.HasPendingRaffle) {
+                            break;
+                        }
+
+                        var keyword = data.Keyword;
+                        var duration = data.Duration;
+
+                        // Calc now vs when we started the raffle
+                        var now = new Date(new Date().toUTCString());
+                        var startTimestamp = new Date(new Date(data.RaffleStartTimestamp).toUTCString());
+                        var elapsed = (now.getTime() - startTimestamp.getTime()) / 1000;
+
+                        // Time since we started raffle has elapsed longer than original duration
+                        // -  Don't do anything and attempt to stop any active timer
+                        if (elapsed > duration) {
+                            // Stop timer
+                            self.stopTimer();
+                            break;
+                        }
+
+                        // Calc new offset duration
+                        duration = Math.abs(duration - elapsed);
+
+                        // Setup timer
+                        self.canRun = true;
+                        self.keyword = keyword;
+                        self.minutes = duration;
+
+                        // Start timer
+                        self.init();
+                    }
+                    break;
                 case "RAFFLE_STARTED":
                     {
+                        //
+                        // Raffle started event
+
+                        // Init raffle timer
                         self.canRun = true;
 
                         self.keyword = data.Keyword;
@@ -391,11 +439,20 @@ let raffleTimerMixin = {
                     break;
                 case "RAFFLE_ENDED":
                     {
+                        //
+                        // Raffle ended event
+
                         // Stop timer
                         self.stopTimer();
                     }
                     break;
             }
+        });
+
+        // WS opened and ready to go event
+        this.$subscribe("opened", function (event) {
+            // Init
+            self.emit(JSON.stringify({ EventID: 7 }));
         });
     }
 };
